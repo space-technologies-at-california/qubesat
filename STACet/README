@@ -1,0 +1,28 @@
+STACet AX.25 AFSK Packet Engine
+
+    Copyright (C) 2020  Max Burns
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+To start STACet on mac open a terminal window at the STACet directory, and type bash start_STACet.sh
+
+"python3 test_send.py" will send a test packet.
+
+Everything here is very bare-bones, this will send and receive AFSK AX.25 packets, but do not much else...
+
+Right now STACet requires another window running NetCat or similar @ localhost port 8001 (127.0.0.1:8001)
+Hoping to work on a GUI for STACet.
+
+More info will come.
