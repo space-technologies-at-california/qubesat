@@ -1,0 +1,21 @@
+Data to be sent:
+    Ground > Craft
+        commands
+        requests
+            -telemetry
+            -data requests
+        ack
+
+     Craft > Ground
+        telemetry
+            -status
+            -health
+        data
+
+        ack
+
+
+
+
+
+"c: r 90 0 0"
