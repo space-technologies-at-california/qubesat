@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name mainboard)(type Legacy)(uri ${KIPRJMOD}/mainboard.lib)(options "")(descr ""))
-)
