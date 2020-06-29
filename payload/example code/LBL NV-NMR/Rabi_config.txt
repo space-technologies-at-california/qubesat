@@ -1,0 +1,9 @@
+sequence_name = RabiSeq
+photon_or_photodiode = photon
+MW_FREQ = 2.8
+t_AOM = 50000
+t_readoutDelay = 50000
+START_LENGTH = 1000
+END_LENGTH = 30000
+STEP_LENGTH = 1000
+Navg = 1

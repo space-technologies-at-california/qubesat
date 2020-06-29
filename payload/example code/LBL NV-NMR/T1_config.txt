@@ -1,0 +1,11 @@
+sequence_name = T1seq
+photon_or_photodiode = photon
+MW_FREQ = 2.8
+t_AOM = 50000
+t_readoutDelay = 50000
+start_t = 4500
+end_t = 5000000
+step_t = 10000
+t_pi = 24
+DAQtimeout = 120
+Navg = 1

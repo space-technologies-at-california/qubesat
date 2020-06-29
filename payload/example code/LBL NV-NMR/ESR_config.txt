@@ -1,0 +1,8 @@
+sequence_name = ESRseq
+photon_or_photodiode = photon
+t_AOM = 50000
+t_readoutDelay = 50000
+START_FREQUENCY = 2.5
+END_FREQUENCY = 2.6
+STEP_FREQUENCY = 0.005
+Navg = 1
