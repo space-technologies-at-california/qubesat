@@ -198,4 +198,5 @@
   (lib (name Triac_Thyristor)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Triac_Thyristor.lib)(options "")(descr ""))
   (lib (name Valve)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Valve.lib)(options "")(descr ""))
   (lib (name Video)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Video.lib)(options "")(descr ""))
+  (lib (name Payload_V01)(type Legacy)(uri ${KIPRJMOD}/Payload_V01.lib)(options "")(descr ""))
 )
