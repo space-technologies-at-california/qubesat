@@ -60,7 +60,7 @@ AR Path="/5F1B5EE2" Ref="JP?"  Part="1"
 AR Path="/5F190638/5F1B5EE2" Ref="JP2"  Part="1" 
 F 0 "JP2" H 4950 3014 50  0000 C CNN
 F 1 "Jumper" H 4950 2923 50  0000 C CNN
-F 2 "" H 4950 2750 50  0001 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged2Bar_Pad1.0x1.5mm" H 4950 2750 50  0001 C CNN
 F 3 "~" H 4950 2750 50  0001 C CNN
 	1    4950 2750
 	1    0    0    -1  
@@ -86,7 +86,7 @@ AR Path="/5F1B5EEE" Ref="JP?"  Part="1"
 AR Path="/5F190638/5F1B5EEE" Ref="JP3"  Part="1" 
 F 0 "JP3" H 5250 1674 50  0000 C CNN
 F 1 "Jumper_3_Open" H 5250 1583 50  0000 C CNN
-F 2 "" H 5250 1450 50  0001 C CNN
+F 2 "Jumper:SolderJumper-3_P1.3mm_Open_Pad1.0x1.5mm" H 5250 1450 50  0001 C CNN
 F 3 "~" H 5250 1450 50  0001 C CNN
 	1    5250 1450
 	1    0    0    -1  
@@ -165,7 +165,7 @@ AR Path="/5F1B5F17" Ref="JP?"  Part="1"
 AR Path="/5F190638/5F1B5F17" Ref="JP4"  Part="1" 
 F 0 "JP4" H 6100 1674 50  0000 C CNN
 F 1 "Jumper_3_Open" H 6100 1583 50  0000 C CNN
-F 2 "" H 6100 1450 50  0001 C CNN
+F 2 "Jumper:SolderJumper-3_P1.3mm_Open_Pad1.0x1.5mm" H 6100 1450 50  0001 C CNN
 F 3 "~" H 6100 1450 50  0001 C CNN
 	1    6100 1450
 	1    0    0    -1  
@@ -637,7 +637,7 @@ AR Path="/5F1B5FFB" Ref="Y?"  Part="1"
 AR Path="/5F190638/5F1B5FFB" Ref="Y1"  Part="1" 
 F 0 "Y1" H 3225 6125 50  0000 C CNN
 F 1 "SG-310SCF" H 3225 6034 50  0000 C CNN
-F 2 "" H 3200 5700 50  0001 C CNN
+F 2 "Crystal:Crystal_SMD_SeikoEpson_TSX3225-4Pin_3.2x2.5mm_HandSoldering" H 3200 5700 50  0001 C CNN
 F 3 "" H 3200 5700 50  0001 C CNN
 	1    3200 5700
 	1    0    0    -1  
@@ -684,7 +684,7 @@ AR Path="/5F1B6011" Ref="JP?"  Part="1"
 AR Path="/5F190638/5F1B6011" Ref="JP1"  Part="1" 
 F 0 "JP1" V 2596 5587 50  0000 L CNN
 F 1 "Jumper_3_Open" V 2505 5587 50  0000 L CNN
-F 2 "" H 2550 5500 50  0001 C CNN
+F 2 "Jumper:SolderJumper-3_P1.3mm_Open_Pad1.0x1.5mm" H 2550 5500 50  0001 C CNN
 F 3 "~" H 2550 5500 50  0001 C CNN
 	1    2550 5500
 	0    -1   -1   0   
@@ -833,7 +833,7 @@ AR Path="/5F1B605B" Ref="U?"  Part="1"
 AR Path="/5F190638/5F1B605B" Ref="U1"  Part="1" 
 F 0 "U1" H 2644 6696 50  0000 L CNN
 F 1 "REF196" H 2350 6400 50  0000 L CNN
-F 2 "" H 2300 6600 50  0001 C CIN
+F 2 "Package_SO:TSSOP-8_4.4x3mm_P0.65mm" H 2300 6600 50  0001 C CIN
 F 3 "https://www.analog.com/static/imported-files/data_sheets/REF19xSeries.pdf" H 2300 6600 50  0001 C CIN
 	1    2300 6650
 	1    0    0    -1  
