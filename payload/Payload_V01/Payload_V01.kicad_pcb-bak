@@ -781,7 +781,7 @@
     (pad "" smd roundrect (at -0.625 0.625) (size 1.01 1.01) (layers F.Paste) (roundrect_rratio 0.247525))
     (pad "" smd roundrect (at -0.625 -0.625) (size 1.01 1.01) (layers F.Paste) (roundrect_rratio 0.247525))
     (pad 21 smd roundrect (at 0 0) (size 2.5 2.5) (layers F.Cu F.Mask) (roundrect_rratio 0.1))
-    (model ${KISYS3DMOD}/Package_CSP.3dshapes/LFCSP-20-1EP_4x4mm_P0.5mm_EP2.5x2.5mm.wrl
+    (model "${KIPRJMOD}/SolidWorks CAD/RM_10_ADI.step"
       (at (xyz 0 0 0))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -1325,10 +1325,10 @@
     (pad 2 thru_hole circle (at 1 1) (size 1.2 1.2) (drill 0.6) (layers *.Cu *.Mask)
       (net 138 "Net-(LD1-Pad2)"))
     (pad 1 thru_hole roundrect (at 0 0 45) (size 1.2 1.2) (drill 0.6) (layers *.Cu *.Mask) (roundrect_rratio 0.208))
-    (model ${KISYS3DMOD}/OptoDevice.3dshapes/LaserDiode_TO18-D5.6-3.wrl
-      (at (xyz 0 0 0))
+    (model "${KIPRJMOD}/SolidWorks CAD/L520P50-Step.step"
+      (offset (xyz 1 0 2.5))
       (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
+      (rotate (xyz 0 -90 0))
     )
   )
 
@@ -1871,10 +1871,10 @@
       (net 17 "Net-(D2-Pad2)"))
     (pad 1 thru_hole oval (at 0 0) (size 1.6 1.2) (drill 0.7) (layers *.Cu *.Mask)
       (net 18 "Net-(D2-Pad1)"))
-    (model ${KISYS3DMOD}/Package_TO_SOT_THT.3dshapes/TO-5-3.wrl
-      (at (xyz 0 0 0))
+    (model "${KIPRJMOD}/SolidWorks CAD/FDS100-Step.step"
+      (offset (xyz 2.5 0 0))
       (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
+      (rotate (xyz 90 180 -180))
     )
   )
 
