@@ -125,8 +125,6 @@ Wire Wire Line
 Wire Wire Line
 	5250 1850 4950 1850
 Connection ~ 5250 2300
-Text Label 4950 1850 0    50   ~ 0
-DVDD_1
 Wire Wire Line
 	5250 1850 5250 1600
 Connection ~ 5250 1850
@@ -138,8 +136,6 @@ Wire Wire Line
 	5500 1450 5700 1450
 Wire Wire Line
 	5700 1450 5700 950 
-Text Label 5700 1200 1    50   ~ 0
-3.3V_BF
 Wire Wire Line
 	5700 950  6350 950 
 Wire Wire Line
@@ -687,8 +683,6 @@ Connection ~ 1750 6650
 Wire Wire Line
 	1750 6650 1900 6650
 Connection ~ 1250 6650
-Text Label 1050 6650 0    50   ~ 0
-5V_EXT
 Wire Wire Line
 	2600 6650 2900 6650
 Connection ~ 2900 6650
@@ -823,20 +817,6 @@ Wire Wire Line
 	3800 4750 3450 4750
 Wire Wire Line
 	3800 4350 3450 4350
-Text Label 3800 3900 0    50   ~ 0
-SCLK
-Text Label 3800 4050 0    50   ~ 0
-SDATA
-Text Label 3800 4200 0    50   ~ 0
-FSYNC
-Text Label 3450 4350 0    50   ~ 0
-RESET
-Text Label 3450 4750 0    50   ~ 0
-SLEEP
-Text Label 3450 4900 0    50   ~ 0
-PSEL
-Text Label 3450 5050 0    50   ~ 0
-FSEL
 $Comp
 L Connector:Screw_Terminal_01x02 J?
 U 1 1 5F1B6092
@@ -1153,4 +1133,24 @@ F 3 "" H 1450 1600 50  0001 C CNN
 	1    1450 1600
 	1    0    0    -1  
 $EndComp
+Text HLabel 3800 3900 0    50   Input ~ 0
+SCLK
+Text HLabel 3800 4050 0    50   Input ~ 0
+SDATA
+Text HLabel 3800 4200 0    50   Input ~ 0
+FSYNC
+Text HLabel 3450 4350 0    50   Input ~ 0
+RESET
+Text HLabel 3450 4750 0    50   Input ~ 0
+SLEEP
+Text HLabel 3450 4900 0    50   Input ~ 0
+PSEL
+Text HLabel 3450 5050 0    50   Input ~ 0
+FSEL
+Text HLabel 1050 6650 0    50   Input ~ 0
+5V_EXT
+Text HLabel 4950 1850 0    50   Input ~ 0
+DVDD1
+Text HLabel 5700 950  0    50   Input ~ 0
+3,3V_BF
 $EndSCHEMATC

@@ -24,4 +24,6 @@ F 3 "http://www.st.com/st-web-ui/static/active/en/resource/technical/document/da
 	1    5350 3850
 	1    0    0    -1  
 $EndComp
+Text HLabel 4450 3450 0    50   Input ~ 0
+SCLK
 $EndSCHEMATC
