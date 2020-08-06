@@ -1152,5 +1152,5 @@ Text HLabel 1050 6650 0    50   Input ~ 0
 Text HLabel 4950 1850 0    50   Input ~ 0
 DVDD1
 Text HLabel 5700 950  0    50   Input ~ 0
-3,3V_BF
+3.3V_BF
 $EndSCHEMATC

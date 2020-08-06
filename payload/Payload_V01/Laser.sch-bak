@@ -112,6 +112,6 @@ Wire Wire Line
 	6800 3850 6800 4000
 Wire Wire Line
 	6800 4000 6400 4000
-Text Label 6450 4000 0    50   ~ 0
+Text HLabel 6700 4000 3    50   Input ~ 0
 LD_CURR
 $EndSCHEMATC

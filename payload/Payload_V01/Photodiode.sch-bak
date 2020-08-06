@@ -115,4 +115,9 @@ Wire Wire Line
 	7600 3050 8000 3050
 Wire Wire Line
 	6600 4450 6600 4600
+Text HLabel 8300 3800 2    50   Input ~ 0
+PD_OUT
+Wire Wire Line
+	8000 3800 8300 3800
+Connection ~ 8000 3800
 $EndSCHEMATC
