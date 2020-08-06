@@ -1,6 +1,27 @@
 EESchema-LIBRARY Version 2.4
 #encoding utf-8
 #
+# Amplifier_Operational_LM321
+#
+DEF Amplifier_Operational_LM321 U 0 5 Y Y 1 F N
+F0 "U" 0 300 50 H V L CNN
+F1 "Amplifier_Operational_LM321" 0 200 50 H V L CNN
+F2 "Package_TO_SOT_SMD:SOT-23-5" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+ALIAS MCP6L01Ux-xOT
+$FPLIST
+ SOT?23*
+$ENDFPLIST
+DRAW
+P 4 0 1 10 -200 200 200 0 -200 -200 -200 200 f
+X + 1 -300 100 100 R 50 50 1 1 I
+X V- 2 -100 -300 150 U 50 50 1 1 W
+X - 3 -300 -100 100 R 50 50 1 1 I
+X ~ 4 300 0 100 L 50 50 1 1 O
+X V+ 5 -100 300 150 D 50 50 1 1 W
+ENDDRAW
+ENDDEF
+#
 # Connector_Conn_Coaxial
 #
 DEF Connector_Conn_Coaxial J 0 40 Y N 1 F N
@@ -84,28 +105,6 @@ P 2 0 1 0 -70 90 -30 90 N
 P 2 0 1 0 -50 110 -50 70 N
 X ~ 1 0 150 110 D 50 50 1 1 P
 X ~ 2 0 -150 110 U 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_D
-#
-DEF Device_D D 0 40 N N 1 F N
-F0 "D" 0 100 50 H V C CNN
-F1 "Device_D" 0 -100 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- TO-???*
- *_Diode_*
- *SingleDiode*
- D_*
-$ENDFPLIST
-DRAW
-P 2 0 1 10 -50 50 -50 -50 N
-P 2 0 1 0 50 0 -50 0 N
-P 4 0 1 10 50 50 50 -50 -50 0 50 50 N
-X K 1 -150 0 100 R 50 50 1 1 P
-X A 2 150 0 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
