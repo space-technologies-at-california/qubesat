@@ -1,5 +1,12 @@
+/** @file patest_timing.c
+	@ingroup test_src
+	@brief Play a sine wave for several seconds, and spits out a ton of timing info while it's at it. Based on patest_sine.c
+	@author Bjorn Roche
+	@author Ross Bencina <rossb@audiomulch.com>
+    @author Phil Burk <philburk@softsynth.com>
+*/
 /*
- * $Id$
+ * $Id: patest_timing.c 578 2003-09-02 04:17:38Z rossbencina $
  *
  * This program uses the PortAudio Portable Audio Library.
  * For more information see: http://www.portaudio.com/
@@ -35,12 +42,13 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
 #define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
+#define SAMPLE_RATE   (44100)
 #define FRAMES_PER_BUFFER  (64)
 
 #ifndef M_PI
@@ -50,10 +58,11 @@
 #define TABLE_SIZE   (200)
 typedef struct
 {
+    PaStream *stream;
+    PaTime start;
     float sine[TABLE_SIZE];
     int left_phase;
     int right_phase;
-    char message[20];
 }
 paTestData;
 
@@ -74,6 +83,13 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     (void) timeInfo; /* Prevent unused variable warnings. */
     (void) statusFlags;
     (void) inputBuffer;
+
+    printf( "Timing info given to callback: Adc: %g, Current: %g, Dac: %g\n",
+            timeInfo->inputBufferAdcTime,
+            timeInfo->currentTime,
+            timeInfo->outputBufferDacTime );
+
+    printf( "getStreamTime() returns: %g\n", Pa_GetStreamTime(data->stream) - data->start );
     
     for( i=0; i<framesPerBuffer; i++ )
     {
@@ -88,15 +104,6 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
-}
-
 /*******************************************************************/
 int main(void);
 int main(void)
@@ -107,12 +114,13 @@ int main(void)
     paTestData data;
     int i;
 
+    
     printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
-
+    
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
     data.left_phase = data.right_phase = 0;
     
@@ -120,10 +128,6 @@ int main(void)
     if( err != paNoError ) goto error;
 
     outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
-    if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
-    }
     outputParameters.channelCount = 2;       /* stereo output */
     outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
@@ -138,13 +142,12 @@ int main(void)
               paClipOff,      /* we won't output out of range samples so don't bother clipping them */
               patestCallback,
               &data );
-    if( err != paNoError ) goto error;
-
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
+    data.stream = stream;
+    data.start = Pa_GetStreamTime(stream);
     if( err != paNoError ) goto error;
 
     err = Pa_StartStream( stream );
+    data.start = Pa_GetStreamTime(stream);
     if( err != paNoError ) goto error;
 
     printf("Play for %d seconds.\n", NUM_SECONDS );
@@ -158,6 +161,7 @@ int main(void)
 
     Pa_Terminate();
     printf("Test finished.\n");
+    printf("The tone should have been heard for about 5 seconds and all the timing info above should report that about 5 seconds elapsed (except Adc, which is undefined since there was no input device opened).\n");
     
     return err;
 error:

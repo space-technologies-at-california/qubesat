@@ -1,8 +1,15 @@
+/** @file patest_toomanysines.c
+	@ingroup test_src
+	@brief Play more sine waves than we can handle in real time as a stress test.
+    @todo This may not be needed now that we have "patest_out_overflow.c".
+	@author Ross Bencina <rossb@audiomulch.com>
+	@author Phil Burk <philburk@softsynth.com>
+*/
 /*
  * $Id$
  *
  * This program uses the PortAudio Portable Audio Library.
- * For more information see: http://www.portaudio.com/
+ * For more information see: http://www.portaudio.com
  * Copyright (c) 1999-2000 Ross Bencina and Phil Burk
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -35,25 +42,24 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
-#define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
-#define FRAMES_PER_BUFFER  (64)
-
+#define MAX_SINES     (1000)
+#define MAX_LOAD      (1.2)
+#define SAMPLE_RATE   (44100)
+#define FRAMES_PER_BUFFER  (512)
 #ifndef M_PI
 #define M_PI  (3.14159265)
 #endif
+#define TWOPI (M_PI * 2.0)
 
-#define TABLE_SIZE   (200)
-typedef struct
+typedef struct paTestData
 {
-    float sine[TABLE_SIZE];
-    int left_phase;
-    int right_phase;
-    char message[20];
+    int numSines;
+    double phases[MAX_SINES];
 }
 paTestData;
 
@@ -62,39 +68,40 @@ paTestData;
 ** that could mess up the system like calling malloc() or free().
 */
 static int patestCallback( const void *inputBuffer, void *outputBuffer,
-                            unsigned long framesPerBuffer,
-                            const PaStreamCallbackTimeInfo* timeInfo,
-                            PaStreamCallbackFlags statusFlags,
-                            void *userData )
+                           unsigned long framesPerBuffer,
+                           const PaStreamCallbackTimeInfo* timeInfo,
+                           PaStreamCallbackFlags statusFlags,
+                           void *userData )
 {
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     unsigned long i;
+    int j;
+    int finished = 0;
+    (void) inputBuffer; /* Prevent unused variable warning. */
 
-    (void) timeInfo; /* Prevent unused variable warnings. */
-    (void) statusFlags;
-    (void) inputBuffer;
-    
     for( i=0; i<framesPerBuffer; i++ )
     {
-        *out++ = data->sine[data->left_phase];  /* left */
-        *out++ = data->sine[data->right_phase];  /* right */
-        data->left_phase += 1;
-        if( data->left_phase >= TABLE_SIZE ) data->left_phase -= TABLE_SIZE;
-        data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
-        if( data->right_phase >= TABLE_SIZE ) data->right_phase -= TABLE_SIZE;
-    }
-    
-    return paContinue;
-}
+        float output = 0.0;
+        double phaseInc = 0.02;
+        double phase;
+        for( j=0; j<data->numSines; j++ )
+        {
+            /* Advance phase of next oscillator. */
+            phase = data->phases[j];
+            phase += phaseInc;
+            if( phase > TWOPI ) phase -= TWOPI;
 
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
+            phaseInc *= 1.02;
+            if( phaseInc > 0.5 ) phaseInc *= 0.5;
+
+            /* This is not a very efficient way to calc sines. */
+            output += (float) sin( phase );
+            data->phases[j] = phase;
+        }
+        *out++ = (float) (output / data->numSines);
+    }
+    return finished;
 }
 
 /*******************************************************************/
@@ -104,61 +111,85 @@ int main(void)
     PaStreamParameters outputParameters;
     PaStream *stream;
     PaError err;
-    paTestData data;
-    int i;
+    int numStress;
+    paTestData data = {0};
+    double load;
 
-    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
+    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d. MAX_LOAD = %f\n",
+        SAMPLE_RATE, FRAMES_PER_BUFFER, MAX_LOAD );
 
-    /* initialise sinusoidal wavetable */
-    for( i=0; i<TABLE_SIZE; i++ )
-    {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
-    }
-    data.left_phase = data.right_phase = 0;
-    
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
-
-    outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+    
+    outputParameters.device = Pa_GetDefaultOutputDevice();  /* default output device */
     if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
+        fprintf(stderr,"Error: No default output device.\n");
+        goto error;
     }
-    outputParameters.channelCount = 2;       /* stereo output */
-    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    outputParameters.channelCount = 1;                      /* mono output */
+    outputParameters.sampleFormat = paFloat32;              /* 32 bit floating point output */
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
     err = Pa_OpenStream(
               &stream,
-              NULL, /* no input */
+              NULL,         /* no input */
               &outputParameters,
               SAMPLE_RATE,
               FRAMES_PER_BUFFER,
-              paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+              paClipOff,    /* we won't output out of range samples so don't bother clipping them */
               patestCallback,
-              &data );
+              &data );    
     if( err != paNoError ) goto error;
-
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-    if( err != paNoError ) goto error;
-
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
 
-    printf("Play for %d seconds.\n", NUM_SECONDS );
-    Pa_Sleep( NUM_SECONDS * 1000 );
+    /* Determine number of sines required to get to 50% */
+    do
+    {        Pa_Sleep( 100 );
 
+        load = Pa_GetStreamCpuLoad( stream );
+        printf("numSines = %d, CPU load = %f\n", data.numSines, load );
+		
+		if( load < 0.3 )
+		{
+			data.numSines += 10;
+		}
+		else if( load < 0.4 )
+		{
+			data.numSines += 2;
+		}
+		else
+		{
+			data.numSines += 1;
+		}
+		
+    }
+    while( load < 0.5 );
+    
+    /* Calculate target stress value then ramp up to that level*/
+    numStress = (int) (2.0 * data.numSines * MAX_LOAD );
+    if( numStress > MAX_SINES )
+        numStress = MAX_SINES;	
+    for( ; data.numSines < numStress; data.numSines+=2 )
+    {
+        Pa_Sleep( 200 );
+        load = Pa_GetStreamCpuLoad( stream );
+        printf("STRESSING: numSines = %d, CPU load = %f\n", data.numSines, load );
+    }
+    
+    printf("Suffer for 5 seconds.\n");
+    Pa_Sleep( 5000 );
+    
+    printf("Stop stream.\n");
     err = Pa_StopStream( stream );
     if( err != paNoError ) goto error;
-
+    
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;
-
+    
     Pa_Terminate();
     printf("Test finished.\n");
-    
     return err;
 error:
     Pa_Terminate();

@@ -1,3 +1,9 @@
+/** @file patest_write_stop.c
+	@brief Play a few seconds of silence followed by a few cycles of a sine wave. Tests to make sure that pa_StopStream() completes playback in blocking I/O
+	@author Bjorn Roche of XO Audio (www.xoaudio.com)
+	@author Ross Bencina
+	@author Phil Burk
+*/
 /*
  * $Id$
  *
@@ -35,100 +41,60 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
-#define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
-#define FRAMES_PER_BUFFER  (64)
+#define NUM_SECONDS         (5)
+#define SAMPLE_RATE         (44100)
+#define FRAMES_PER_BUFFER   (1024)
 
 #ifndef M_PI
 #define M_PI  (3.14159265)
 #endif
 
 #define TABLE_SIZE   (200)
-typedef struct
-{
-    float sine[TABLE_SIZE];
-    int left_phase;
-    int right_phase;
-    char message[20];
-}
-paTestData;
 
-/* This routine will be called by the PortAudio engine when audio is needed.
-** It may called at interrupt level on some machines so don't do anything
-** that could mess up the system like calling malloc() or free().
-*/
-static int patestCallback( const void *inputBuffer, void *outputBuffer,
-                            unsigned long framesPerBuffer,
-                            const PaStreamCallbackTimeInfo* timeInfo,
-                            PaStreamCallbackFlags statusFlags,
-                            void *userData )
-{
-    paTestData *data = (paTestData*)userData;
-    float *out = (float*)outputBuffer;
-    unsigned long i;
 
-    (void) timeInfo; /* Prevent unused variable warnings. */
-    (void) statusFlags;
-    (void) inputBuffer;
-    
-    for( i=0; i<framesPerBuffer; i++ )
-    {
-        *out++ = data->sine[data->left_phase];  /* left */
-        *out++ = data->sine[data->right_phase];  /* right */
-        data->left_phase += 1;
-        if( data->left_phase >= TABLE_SIZE ) data->left_phase -= TABLE_SIZE;
-        data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
-        if( data->right_phase >= TABLE_SIZE ) data->right_phase -= TABLE_SIZE;
-    }
-    
-    return paContinue;
-}
-
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
-}
-
-/*******************************************************************/
 int main(void);
 int main(void)
 {
     PaStreamParameters outputParameters;
     PaStream *stream;
     PaError err;
-    paTestData data;
-    int i;
+    float buffer[FRAMES_PER_BUFFER][2]; /* stereo output buffer */
+    float sine[TABLE_SIZE]; /* sine wavetable */
+    int left_phase = 0;
+    int right_phase = 0;
+    int left_inc = 1;
+    int right_inc = 3; /* higher pitch so we can distinguish left and right. */
+    int i, j;
+    int bufferCount;
+    const int   framesBy2  = FRAMES_PER_BUFFER >> 1;
+    const float framesBy2f = (float) framesBy2 ;
 
-    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
-
+    
+    printf( "PortAudio Test: output silence, followed by one buffer of a ramped sine wave. SR = %d, BufSize = %d\n",
+            SAMPLE_RATE, FRAMES_PER_BUFFER);
+    
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
-    data.left_phase = data.right_phase = 0;
+
     
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
 
     outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
-    if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
-    }
     outputParameters.channelCount = 2;       /* stereo output */
     outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-    outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+    outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultHighOutputLatency * 5;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
+    /* open the stream */
     err = Pa_OpenStream(
               &stream,
               NULL, /* no input */
@@ -136,20 +102,50 @@ int main(void)
               SAMPLE_RATE,
               FRAMES_PER_BUFFER,
               paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-              patestCallback,
-              &data );
+              NULL, /* no callback, use blocking API */
+              NULL ); /* no callback, so no callback userData */
     if( err != paNoError ) goto error;
 
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-    if( err != paNoError ) goto error;
-
+    /* start the stream */
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
 
-    printf("Play for %d seconds.\n", NUM_SECONDS );
-    Pa_Sleep( NUM_SECONDS * 1000 );
+    printf("Playing %d seconds of silence followed by one buffer of a ramped sinusoid.\n", NUM_SECONDS );
 
+    bufferCount = ((NUM_SECONDS * SAMPLE_RATE) / FRAMES_PER_BUFFER);
+
+    /* clear buffer */
+    for( j=0; j < FRAMES_PER_BUFFER; j++ )
+    {
+        buffer[j][0] = 0;  /* left */
+        buffer[j][1] = 0;  /* right */
+    }
+    /* play the silent buffer a bunch o' times */
+    for( i=0; i < bufferCount; i++ )
+    {
+        err = Pa_WriteStream( stream, buffer, FRAMES_PER_BUFFER );
+        if( err != paNoError ) goto error;
+    }   
+    /* play a non-silent buffer once */
+    for( j=0; j < FRAMES_PER_BUFFER; j++ )
+    {
+        float ramp = 1;
+        if( j < framesBy2 )
+           ramp = j / framesBy2f;
+        else
+           ramp = (FRAMES_PER_BUFFER - j) / framesBy2f ;
+
+        buffer[j][0] = sine[left_phase] * ramp;  /* left */
+        buffer[j][1] = sine[right_phase] * ramp;  /* right */
+        left_phase += left_inc;
+        if( left_phase >= TABLE_SIZE ) left_phase -= TABLE_SIZE;
+        right_phase += right_inc;
+        if( right_phase >= TABLE_SIZE ) right_phase -= TABLE_SIZE;
+    }
+    err = Pa_WriteStream( stream, buffer, FRAMES_PER_BUFFER );
+    if( err != paNoError ) goto error;
+
+    /* stop stream, close, and terminate */
     err = Pa_StopStream( stream );
     if( err != paNoError ) goto error;
 

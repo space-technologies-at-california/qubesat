@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: patest_sine.c 1097 2006-08-26 08:27:53Z rossb $
  *
  * This program uses the PortAudio Portable Audio Library.
  * For more information see: http://www.portaudio.com/
@@ -35,12 +35,28 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
+/** @file patest_sine_srate_mac.c
+	@ingroup test_src
+	@brief Plays sine waves at 44100 and 48000,
+          and forces the hardware to change if this is a mac.
+          Designed for use with CoreAudio.
+	@author Bjorn Roche <bjorn@xowave.com>
+   @author Ross Bencina <rossb@audiomulch.com>
+   @author Phil Burk <philburk@softsynth.com>
+*/
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
+
+#ifdef __APPLE__
+#include "pa_mac_core.h"
+#endif
 
 #define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
+#define SAMPLE_RATE1   (44100)
+#define SAMPLE_RATE2   (48000)
 #define FRAMES_PER_BUFFER  (64)
 
 #ifndef M_PI
@@ -53,7 +69,6 @@ typedef struct
     float sine[TABLE_SIZE];
     int left_phase;
     int right_phase;
-    char message[20];
 }
 paTestData;
 
@@ -88,15 +103,6 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
-}
-
 /*******************************************************************/
 int main(void);
 int main(void)
@@ -105,56 +111,63 @@ int main(void)
     PaStream *stream;
     PaError err;
     paTestData data;
+#ifdef __APPLE__
+    PaMacCoreStreamInfo macInfo;
+#endif
     int i;
-
-    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
 
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
     data.left_phase = data.right_phase = 0;
-    
+
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
 
-    outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
-    if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
+    for( i=0; i<2; ++i ) {
+        const float sr = i ? SAMPLE_RATE2 : SAMPLE_RATE1;
+        printf("PortAudio Test: output sine wave. SR = %g, BufSize = %d\n", sr, FRAMES_PER_BUFFER);
+        outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+        if (outputParameters.device == paNoDevice) {
+            fprintf(stderr,"Error: No default output device.\n");
+            goto error;
+        }
+        outputParameters.channelCount = 2;       /* stereo output */
+        outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+        outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+        /** setup host specific info */
+#ifdef __APPLE__
+        PaMacCore_SetupStreamInfo( &macInfo, paMacCorePro );
+        outputParameters.hostApiSpecificStreamInfo = &macInfo;
+#else
+        printf( "Hardware SR changing not being tested on this platform.\n" );
+        outputParameters.hostApiSpecificStreamInfo = NULL;
+#endif
+        err = Pa_OpenStream(
+                  &stream,
+                  NULL, /* no input */
+                  &outputParameters,
+                  sr,
+                  FRAMES_PER_BUFFER,
+                  paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+                  patestCallback,
+                  &data );
+       if( err != paNoError ) goto error;
+
+       err = Pa_StartStream( stream );
+       if( err != paNoError ) goto error;
+
+       printf("Play for %d seconds.\n", NUM_SECONDS );
+       Pa_Sleep( NUM_SECONDS * 1000 );
+
+       err = Pa_StopStream( stream );
+       if( err != paNoError ) goto error;
+
+       err = Pa_CloseStream( stream );
+       if( err != paNoError ) goto error;
     }
-    outputParameters.channelCount = 2;       /* stereo output */
-    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-    outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
-    outputParameters.hostApiSpecificStreamInfo = NULL;
-
-    err = Pa_OpenStream(
-              &stream,
-              NULL, /* no input */
-              &outputParameters,
-              SAMPLE_RATE,
-              FRAMES_PER_BUFFER,
-              paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-              patestCallback,
-              &data );
-    if( err != paNoError ) goto error;
-
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-    if( err != paNoError ) goto error;
-
-    err = Pa_StartStream( stream );
-    if( err != paNoError ) goto error;
-
-    printf("Play for %d seconds.\n", NUM_SECONDS );
-    Pa_Sleep( NUM_SECONDS * 1000 );
-
-    err = Pa_StopStream( stream );
-    if( err != paNoError ) goto error;
-
-    err = Pa_CloseStream( stream );
-    if( err != paNoError ) goto error;
 
     Pa_Terminate();
     printf("Test finished.\n");

@@ -1,3 +1,9 @@
+/** @file paex_sine.c
+	@ingroup examples_src
+	@brief Play a sine wave for several seconds.
+	@author Ross Bencina <rossb@audiomulch.com>
+    @author Phil Burk <philburk@softsynth.com>
+*/
 /*
  * $Id$
  *
@@ -37,10 +43,10 @@
  */
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
 #define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
+#define SAMPLE_RATE   (44100)
 #define FRAMES_PER_BUFFER  (64)
 
 #ifndef M_PI
@@ -112,7 +118,7 @@ int main(void)
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
     data.left_phase = data.right_phase = 0;
     

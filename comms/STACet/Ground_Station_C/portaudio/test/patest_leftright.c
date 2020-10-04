@@ -1,8 +1,18 @@
+/** @file patest_leftright.c
+	@ingroup test_src
+	@brief Play different tone sine waves that 
+		alternate between left and right channel.
+
+	The low tone should be on the left channel.
+
+	@author Ross Bencina <rossb@audiomulch.com>
+	@author Phil Burk <philburk@softsynth.com>
+*/
 /*
  * $Id$
  *
  * This program uses the PortAudio Portable Audio Library.
- * For more information see: http://www.portaudio.com/
+ * For more information see: http://www.portaudio.com
  * Copyright (c) 1999-2000 Ross Bencina and Phil Burk
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -35,87 +45,92 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
-#define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
-#define FRAMES_PER_BUFFER  (64)
-
+#define NUM_SECONDS   (8)
+#define SAMPLE_RATE   (44100)
+#define FRAMES_PER_BUFFER  (512)
 #ifndef M_PI
 #define M_PI  (3.14159265)
 #endif
-
 #define TABLE_SIZE   (200)
+#define BALANCE_DELTA  (0.001)
+
 typedef struct
 {
     float sine[TABLE_SIZE];
     int left_phase;
     int right_phase;
-    char message[20];
-}
-paTestData;
+    float targetBalance; // 0.0 = left, 1.0 = right
+    float currentBalance;
+} paTestData;
 
 /* This routine will be called by the PortAudio engine when audio is needed.
 ** It may called at interrupt level on some machines so don't do anything
 ** that could mess up the system like calling malloc() or free().
 */
-static int patestCallback( const void *inputBuffer, void *outputBuffer,
-                            unsigned long framesPerBuffer,
-                            const PaStreamCallbackTimeInfo* timeInfo,
-                            PaStreamCallbackFlags statusFlags,
-                            void *userData )
+static int patestCallback( const void *inputBuffer,
+                           void *outputBuffer,
+                           unsigned long framesPerBuffer,
+                           const PaStreamCallbackTimeInfo* timeInfo,
+                           PaStreamCallbackFlags statusFlags,
+                           void *userData )
 {
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     unsigned long i;
-
-    (void) timeInfo; /* Prevent unused variable warnings. */
-    (void) statusFlags;
+    int finished = 0;
+    /* Prevent unused variable warnings. */
     (void) inputBuffer;
-    
+
     for( i=0; i<framesPerBuffer; i++ )
     {
-        *out++ = data->sine[data->left_phase];  /* left */
-        *out++ = data->sine[data->right_phase];  /* right */
+		// Smoothly pan between left and right.
+		if( data->currentBalance < data->targetBalance )
+		{
+			data->currentBalance += BALANCE_DELTA;
+		}
+		else if( data->currentBalance > data->targetBalance )
+		{
+			data->currentBalance -= BALANCE_DELTA;
+		}
+		// Apply left/right balance.
+        *out++ = data->sine[data->left_phase] * (1.0f - data->currentBalance);  /* left */
+		*out++ = data->sine[data->right_phase] * data->currentBalance;  /* right */
+		
         data->left_phase += 1;
         if( data->left_phase >= TABLE_SIZE ) data->left_phase -= TABLE_SIZE;
         data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
         if( data->right_phase >= TABLE_SIZE ) data->right_phase -= TABLE_SIZE;
     }
-    
-    return paContinue;
-}
 
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
+    return finished;
 }
 
 /*******************************************************************/
 int main(void);
 int main(void)
 {
-    PaStreamParameters outputParameters;
     PaStream *stream;
+    PaStreamParameters outputParameters;
     PaError err;
     paTestData data;
-    int i;
-
-    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
-
+    int i;    
+    printf("Play different tone sine waves that alternate between left and right channel.\n");
+    printf("The low tone should be on the left channel.\n");
+    
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
     data.left_phase = data.right_phase = 0;
-    
+    data.currentBalance = 0.0;
+    data.targetBalance = 0.0;
+
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
 
@@ -129,36 +144,37 @@ int main(void)
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
-    err = Pa_OpenStream(
-              &stream,
-              NULL, /* no input */
-              &outputParameters,
-              SAMPLE_RATE,
-              FRAMES_PER_BUFFER,
-              paClipOff,      /* we won't output out of range samples so don't bother clipping them */
-              patestCallback,
-              &data );
+    err = Pa_OpenStream( &stream,
+                         NULL,                  /* No input. */
+                         &outputParameters,     /* As above. */
+                         SAMPLE_RATE,
+                         FRAMES_PER_BUFFER,
+                         paClipOff,      /* we won't output out of range samples so don't bother clipping them */
+                         patestCallback,
+                         &data );
     if( err != paNoError ) goto error;
-
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-    if( err != paNoError ) goto error;
-
+    
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
-
-    printf("Play for %d seconds.\n", NUM_SECONDS );
-    Pa_Sleep( NUM_SECONDS * 1000 );
+    
+    printf("Play for several seconds.\n");
+    for( i=0; i<4; i++ )
+	{
+		printf("Hear low sound on left side.\n");
+		data.targetBalance = 0.01;
+        Pa_Sleep( 1000 );
+		
+		printf("Hear high sound on right side.\n");
+		data.targetBalance = 0.99;
+        Pa_Sleep( 1000 ); 
+	}
 
     err = Pa_StopStream( stream );
     if( err != paNoError ) goto error;
-
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;
-
     Pa_Terminate();
     printf("Test finished.\n");
-    
     return err;
 error:
     Pa_Terminate();

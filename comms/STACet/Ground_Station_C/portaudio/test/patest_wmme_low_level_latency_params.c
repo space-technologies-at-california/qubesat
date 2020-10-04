@@ -1,9 +1,9 @@
 /*
- * $Id$
+ * $Id: $
+ * Portable Audio I/O Library
+ * Windows MME low level buffer parameters test
  *
- * This program uses the PortAudio Portable Audio Library.
- * For more information see: http://www.portaudio.com/
- * Copyright (c) 1999-2000 Ross Bencina and Phil Burk
+ * Copyright (c) 2007 Ross Bencina
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -35,25 +35,37 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
 
-#define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
-#define FRAMES_PER_BUFFER  (64)
+#include <windows.h>    /* required when using pa_win_wmme.h */
+#include <mmsystem.h>   /* required when using pa_win_wmme.h */
+
+#include "portaudio.h"
+#include "pa_win_wmme.h"
+
+#define NUM_SECONDS         (6)
+#define SAMPLE_RATE         (44100)
+
+#define WMME_FRAMES_PER_BUFFER  (440)
+#define WMME_BUFFER_COUNT       (6)
+
+#define FRAMES_PER_BUFFER   WMME_FRAMES_PER_BUFFER /* hardwire portaudio callback buffer size to WMME buffer size for this test */
 
 #ifndef M_PI
 #define M_PI  (3.14159265)
 #endif
 
-#define TABLE_SIZE   (200)
+#define TABLE_SIZE          (2048)
+
+#define CHANNEL_COUNT       (2)
+
+
 typedef struct
 {
     float sine[TABLE_SIZE];
-    int left_phase;
-    int right_phase;
-    char message[20];
+	double phase;
 }
 paTestData;
 
@@ -69,7 +81,7 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
 {
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
-    unsigned long i;
+    unsigned long i,j;
 
     (void) timeInfo; /* Prevent unused variable warnings. */
     (void) statusFlags;
@@ -77,57 +89,71 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     
     for( i=0; i<framesPerBuffer; i++ )
     {
-        *out++ = data->sine[data->left_phase];  /* left */
-        *out++ = data->sine[data->right_phase];  /* right */
-        data->left_phase += 1;
-        if( data->left_phase >= TABLE_SIZE ) data->left_phase -= TABLE_SIZE;
-        data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
-        if( data->right_phase >= TABLE_SIZE ) data->right_phase -= TABLE_SIZE;
-    }
+        float x = data->sine[(int)data->phase];
+        data->phase += 20;
+        if( data->phase >= TABLE_SIZE ){
+			data->phase -= TABLE_SIZE;
+		}
+
+		for( j = 0; j < CHANNEL_COUNT; ++j ){
+            *out++ = x;
+		}
+	}
     
     return paContinue;
 }
 
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
-}
-
 /*******************************************************************/
-int main(void);
-int main(void)
+int main(int argc, char* argv[])
 {
     PaStreamParameters outputParameters;
+    PaWinMmeStreamInfo wmmeStreamInfo;
     PaStream *stream;
     PaError err;
     paTestData data;
     int i;
+    int deviceIndex;
 
-    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
+    printf("PortAudio Test: output a sine blip on each channel. SR = %d, BufSize = %d, Chans = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER, CHANNEL_COUNT);
+
+    err = Pa_Initialize();
+    if( err != paNoError ) goto error;
+
+	deviceIndex = Pa_GetHostApiInfo( Pa_HostApiTypeIdToHostApiIndex( paMME ) )->defaultOutputDevice;
+	if( argc == 2 ){
+		sscanf( argv[1], "%d", &deviceIndex );
+	}
+
+	printf( "using device id %d (%s)\n", deviceIndex, Pa_GetDeviceInfo(deviceIndex)->name );
 
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
-    data.left_phase = data.right_phase = 0;
-    
-    err = Pa_Initialize();
-    if( err != paNoError ) goto error;
 
-    outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
-    if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
-    }
-    outputParameters.channelCount = 2;       /* stereo output */
-    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
-    outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
+	data.phase = 0;
+
+    outputParameters.device = deviceIndex;
+    outputParameters.channelCount = CHANNEL_COUNT;
+    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point processing */
+    outputParameters.suggestedLatency = 0; /*Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;*/
     outputParameters.hostApiSpecificStreamInfo = NULL;
+
+    wmmeStreamInfo.size = sizeof(PaWinMmeStreamInfo);
+    wmmeStreamInfo.hostApiType = paMME; 
+    wmmeStreamInfo.version = 1;
+    wmmeStreamInfo.flags = paWinMmeUseLowLevelLatencyParameters | paWinMmeDontThrottleOverloadedProcessingThread;
+    wmmeStreamInfo.framesPerBuffer = WMME_FRAMES_PER_BUFFER;
+    wmmeStreamInfo.bufferCount = WMME_BUFFER_COUNT;
+    outputParameters.hostApiSpecificStreamInfo = &wmmeStreamInfo;
+   
+
+	if( Pa_IsFormatSupported( 0, &outputParameters, SAMPLE_RATE ) == paFormatIsSupported  ){
+		printf( "Pa_IsFormatSupported reports device will support %d channels.\n", CHANNEL_COUNT );
+	}else{
+		printf( "Pa_IsFormatSupported reports device will not support %d channels.\n", CHANNEL_COUNT );
+	}
 
     err = Pa_OpenStream(
               &stream,
@@ -138,10 +164,6 @@ int main(void)
               paClipOff,      /* we won't output out of range samples so don't bother clipping them */
               patestCallback,
               &data );
-    if( err != paNoError ) goto error;
-
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
     if( err != paNoError ) goto error;
 
     err = Pa_StartStream( stream );
@@ -167,3 +189,4 @@ error:
     fprintf( stderr, "Error message: %s\n", Pa_GetErrorText( err ) );
     return err;
 }
+

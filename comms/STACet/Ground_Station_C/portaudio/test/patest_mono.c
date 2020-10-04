@@ -1,8 +1,17 @@
+/** @file patest_mono.c
+	@ingroup test_src
+	@brief Play a monophonic sine wave using the Portable Audio api for several seconds.
+	@author Phil Burk  http://www.softsynth.com
+*/
 /*
  * $Id$
  *
+ * Authors:
+ *    Ross Bencina <rossb@audiomulch.com>
+ *    Phil Burk <philburk@softsynth.com>
+ *
  * This program uses the PortAudio Portable Audio Library.
- * For more information see: http://www.portaudio.com/
+ * For more information see: http://www.portaudio.com
  * Copyright (c) 1999-2000 Ross Bencina and Phil Burk
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -35,13 +44,16 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
-#define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
+#define NUM_SECONDS   (10)
+#define SAMPLE_RATE   (44100)
+#define AMPLITUDE     (0.8)
 #define FRAMES_PER_BUFFER  (64)
+#define OUTPUT_DEVICE Pa_GetDefaultOutputDevice()
 
 #ifndef M_PI
 #define M_PI  (3.14159265)
@@ -51,9 +63,7 @@
 typedef struct
 {
     float sine[TABLE_SIZE];
-    int left_phase;
-    int right_phase;
-    char message[20];
+    int phase;
 }
 paTestData;
 
@@ -70,31 +80,18 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     unsigned long i;
-
-    (void) timeInfo; /* Prevent unused variable warnings. */
-    (void) statusFlags;
+    int finished = 0;
+    /* avoid unused variable warnings */
     (void) inputBuffer;
-    
+    (void) timeInfo;
+    (void) statusFlags;
     for( i=0; i<framesPerBuffer; i++ )
     {
-        *out++ = data->sine[data->left_phase];  /* left */
-        *out++ = data->sine[data->right_phase];  /* right */
-        data->left_phase += 1;
-        if( data->left_phase >= TABLE_SIZE ) data->left_phase -= TABLE_SIZE;
-        data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
-        if( data->right_phase >= TABLE_SIZE ) data->right_phase -= TABLE_SIZE;
+        *out++ = data->sine[data->phase];  /* left */
+        data->phase += 1;
+        if( data->phase >= TABLE_SIZE ) data->phase -= TABLE_SIZE;
     }
-    
-    return paContinue;
-}
-
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
+    return finished;
 }
 
 /*******************************************************************/
@@ -106,25 +103,19 @@ int main(void)
     PaError err;
     paTestData data;
     int i;
-
-    printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
-
+    printf("PortAudio Test: output MONO sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) (AMPLITUDE * sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ));
     }
-    data.left_phase = data.right_phase = 0;
+    data.phase = 0;
     
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
 
-    outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
-    if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
-    }
-    outputParameters.channelCount = 2;       /* stereo output */
+    outputParameters.device = OUTPUT_DEVICE;
+    outputParameters.channelCount = 1;       /* MONO output */
     outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
@@ -140,25 +131,20 @@ int main(void)
               &data );
     if( err != paNoError ) goto error;
 
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-    if( err != paNoError ) goto error;
-
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
-
-    printf("Play for %d seconds.\n", NUM_SECONDS );
+    
+    printf("Play for %d seconds.\n", NUM_SECONDS ); fflush(stdout);
     Pa_Sleep( NUM_SECONDS * 1000 );
 
     err = Pa_StopStream( stream );
     if( err != paNoError ) goto error;
-
+    
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;
-
+    
     Pa_Terminate();
     printf("Test finished.\n");
-    
     return err;
 error:
     Pa_Terminate();
@@ -167,3 +153,4 @@ error:
     fprintf( stderr, "Error message: %s\n", Pa_GetErrorText( err ) );
     return err;
 }
+

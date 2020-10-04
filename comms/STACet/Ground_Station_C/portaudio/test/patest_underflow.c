@@ -1,8 +1,15 @@
+/** @file patest_underflow.c
+	@ingroup test_src
+	@brief Simulate an output buffer underflow condition.
+	Tests whether the stream can be stopped when underflowing buffers.
+	@author Ross Bencina <rossb@audiomulch.com>
+	@author Phil Burk <philburk@softsynth.com>
+*/
 /*
  * $Id$
  *
  * This program uses the PortAudio Portable Audio Library.
- * For more information see: http://www.portaudio.com/
+ * For more information see: http://www.portaudio.com
  * Copyright (c) 1999-2000 Ross Bencina and Phil Burk
  *
  * Permission is hereby granted, free of charge, to any person obtaining
@@ -35,13 +42,15 @@
  * requested that these non-binding requests be included along with the 
  * license above.
  */
+
 #include <stdio.h>
 #include <math.h>
-#include "portaudio/include/portaudio.h"
+#include "portaudio.h"
 
-#define NUM_SECONDS   (5)
-#define SAMPLE_RATE   (44101)
-#define FRAMES_PER_BUFFER  (64)
+#define NUM_SECONDS   (20)
+#define SAMPLE_RATE   (44100)
+#define FRAMES_PER_BUFFER  (2048)
+#define MSEC_PER_BUFFER  ( (FRAMES_PER_BUFFER * 1000) / SAMPLE_RATE )
 
 #ifndef M_PI
 #define M_PI  (3.14159265)
@@ -53,7 +62,7 @@ typedef struct
     float sine[TABLE_SIZE];
     int left_phase;
     int right_phase;
-    char message[20];
+    int sleepTime;
 }
 paTestData;
 
@@ -62,19 +71,16 @@ paTestData;
 ** that could mess up the system like calling malloc() or free().
 */
 static int patestCallback( const void *inputBuffer, void *outputBuffer,
-                            unsigned long framesPerBuffer,
-                            const PaStreamCallbackTimeInfo* timeInfo,
-                            PaStreamCallbackFlags statusFlags,
-                            void *userData )
+                           unsigned long framesPerBuffer,
+                           const PaStreamCallbackTimeInfo* timeInfo,
+                           PaStreamCallbackFlags statusFlags,
+                           void *userData )
 {
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     unsigned long i;
-
-    (void) timeInfo; /* Prevent unused variable warnings. */
-    (void) statusFlags;
-    (void) inputBuffer;
-    
+    int finished = 0;
+    (void) inputBuffer; /* Prevent unused variable warnings. */
     for( i=0; i<framesPerBuffer; i++ )
     {
         *out++ = data->sine[data->left_phase];  /* left */
@@ -84,17 +90,12 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
         data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
         if( data->right_phase >= TABLE_SIZE ) data->right_phase -= TABLE_SIZE;
     }
-    
-    return paContinue;
-}
 
-/*
- * This routine is called by portaudio when playback is done.
- */
-static void StreamFinished( void* userData )
-{
-   paTestData *data = (paTestData *) userData;
-   printf( "Stream Completed: %s\n", data->message );
+    /* Cause underflow to occur. */
+    if( data->sleepTime > 0 ) Pa_Sleep( data->sleepTime );
+    data->sleepTime += 1;
+
+    return finished;
 }
 
 /*******************************************************************/
@@ -106,29 +107,25 @@ int main(void)
     PaError err;
     paTestData data;
     int i;
-
     printf("PortAudio Test: output sine wave. SR = %d, BufSize = %d\n", SAMPLE_RATE, FRAMES_PER_BUFFER);
-
     /* initialise sinusoidal wavetable */
     for( i=0; i<TABLE_SIZE; i++ )
     {
-        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. ) / 50.0;
+        data.sine[i] = (float) sin( ((double)i/(double)TABLE_SIZE) * M_PI * 2. );
     }
-    data.left_phase = data.right_phase = 0;
-    
+    data.left_phase = data.right_phase = data.sleepTime = 0;
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
-
+    
     outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
     if (outputParameters.device == paNoDevice) {
-      fprintf(stderr,"Error: No default output device.\n");
-      goto error;
+        fprintf(stderr,"Error: No default output device.\n");
+        goto error;
     }
     outputParameters.channelCount = 2;       /* stereo output */
     outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
-
     err = Pa_OpenStream(
               &stream,
               NULL, /* no input */
@@ -139,26 +136,22 @@ int main(void)
               patestCallback,
               &data );
     if( err != paNoError ) goto error;
-
-    sprintf( data.message, "No Message" );
-    err = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-    if( err != paNoError ) goto error;
-
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
 
-    printf("Play for %d seconds.\n", NUM_SECONDS );
-    Pa_Sleep( NUM_SECONDS * 1000 );
+    while( data.sleepTime < (2 * MSEC_PER_BUFFER) )
+    {
+        printf("SleepTime = %d\n", data.sleepTime );
+        Pa_Sleep( data.sleepTime );
+    }
 
+    printf("Try to stop stream.\n");
     err = Pa_StopStream( stream );
     if( err != paNoError ) goto error;
-
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;
-
     Pa_Terminate();
     printf("Test finished.\n");
-    
     return err;
 error:
     Pa_Terminate();
