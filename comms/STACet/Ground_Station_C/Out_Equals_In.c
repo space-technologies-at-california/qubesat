@@ -83,16 +83,30 @@
 #define PRINTF_S_FORMAT "%d"
 #endif
 
+unsigned int N = 1;
+
 void manipulateSignal(float* in, float* out, size_t size) {
     for (int i = 0; i < size/4; i++) {
-        out[i] = .1 * in[i];
+        if (i < N) {
+            out[i] = in[i];
+        } else {
+            out[i] = 0;
+            for (int k = 0; k < N; k++) {
+                out[i] += in[i - k] / (N * 1.0);
+            }
+        }
     }
 }
 
 /*******************************************************************/
-int main(void);
-int main(void)
+int main(int argc, char** argv);
+int main(int argc, char** argv)
 {
+    // Get 'N' for N point moving average from argv
+    if (argc == 2) {
+        N = atoi(argv[1]);
+    }
+    
     PaStreamParameters inputParameters, outputParameters;
     PaStream *stream = NULL;
     PaError err;
