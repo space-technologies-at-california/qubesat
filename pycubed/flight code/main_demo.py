@@ -26,7 +26,7 @@ def timer_interrupt_handler():
 #		- interrupt for incoming data  
 
 def deploy():
-	wait(20)
+	wait(20 minutes)
 	deploy_antenna()
 	detumble()
 
