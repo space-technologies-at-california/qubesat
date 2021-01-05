@@ -99,43 +99,56 @@ def decode_fsk_zc(fsk_sig, sig_thresh = 0.3, zc_thresh = 0.1, width = 5):
 
 
 """
-Decodes an FSK signal into its binary sequence/message. We will be using the
-correlation method. We multiply the signal by sine waves at different phase shifts
-to convert the fsk signal into a square wave.
-Inputs:
+Decodes an FSK signal into its binary sequence/message. We will use
+a phase allignment method
 	fsk_sig - the FSK signal to decode, as an np array
 Outputs:
 	np array - the sequence of 1s and 0s that the FSK signal encodes
 """
-def decode_fsk_cor(fsk_sig):
-	#Generate sine for low and high signals
+def decode_fsk_PA(fsk_sig, sig_thresh = 0.5):
+	#sequence of 1s and 0s that we will return
+	msg = []
+
+	#Iterate through signal until it begins
+	ind = 0
+	while abs(fsk_sig[ind]) < sig_thresh:
+		ind += 1
+
+	#Generate low and high sine waves
 	t = np.arange(len(fsk_sig)) / SAMP_RATE
-	phi_low, phi_high = 0, 0
 	s_low  = np.sin(FREQ_LOW * 2 * np.pi * t)
 	s_high = np.sin(FREQ_HIGH * 2 * np.pi * t)
-	c_l = np.correlate(fsk_sig, s_low, 'same')
-	c_h = np.correlate(fsk_sig, s_high, 'same')
-	i_l = np.argmax(c_l)
-	i_h = np.argmax(c_h)
 
-	print(i_l, i_h)
+	#Now that we are at the start of the signal, (we leverage preamble)
+	#We can sample a LOW wave and find the phase:
+	indl = ind
+	low_sine = fsk_sig[int(indl):int(indl + (SAMP_RATE / BAUD_RATE))]
+	t0 = (indl + np.argmax(low_sine)) / SAMP_RATE
+	s_low  = np.sin(FREQ_LOW * 2 * np.pi * (t - t0) + np.pi / 2)
+	#Same for High
+	indh = ind + SAMP_RATE / BAUD_RATE
+	high_sine = fsk_sig[int(indh):int(indh + (SAMP_RATE / BAUD_RATE))]
+	t0 = (indh + np.argmax(high_sine)) / SAMP_RATE
+	s_high = np.sin(FREQ_HIGH * 2 * np.pi * (t - t0) + np.pi / 2)
+
+	#Now we convert our signal into highs and lows
+	diff_sig = fsk_sig * (s_high - s_low)
+	samp_per_bit = SAMP_RATE / BAUD_RATE
+	width = int(samp_per_bit * 0.5)
+	mx = float('inf')
+	ind += samp_per_bit / 2
+	while mx > sig_thresh:
+		#In a window, find the max value to see if signal or noise
+		window = diff_sig[int(ind - width//2):int(ind + width//2)]
+		mx = max(abs(min(window)), max(window))
+
+		#Now we can take the mean over the window and append it to the message
+		msg.append(int(np.mean(window) > 0))
+
+		#increment by 1 bit
+		ind += float(SAMP_RATE / BAUD_RATE)
 	
-	s_low  = np.roll(np.sin(FREQ_LOW * 2 * np.pi * t), 27)
-	s_high = np.roll(np.sin(FREQ_HIGH * 2 * np.pi * t), 7)
-	#plt.plot(fsk_sig)
-
-	def moving_average(s, n):
-		return np.convolve(s, np.ones(n), 'valid') / n
-
-	dig = fsk_sig * (s_high - s_low)
-	plt.subplot(3,1,1)
-	plt.plot(fsk_sig)
-	plt.subplot(3,1,2)
-	plt.plot(s_high)
-	plt.subplot(3,1,3)
-	plt.plot(moving_average(dig, 100))
-	plt.show()
-
+	return np.array(msg[:-1])
 
 
 """
@@ -154,10 +167,3 @@ def loss(msg1, msg2):
 	elif l2 > l1:
 		msg1 = np.append(msg1, np.zeros(l2 - l1))
 	return sum(abs(msg1 - msg2)) / len(msg1)
-
-
-#Start fuck around	
-msg =  np.array([0, 0, 1])#np.random.randint(2, size=3)
-print(msg)
-meas_sig = gen_fsk(msg, pre = 0.1, post = 0.1, noise = 0)
-decode_fsk_cor(meas_sig)
