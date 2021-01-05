@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 import matplotlib.pyplot as plt
 from scipy.signal import butter, lfilter
 
@@ -54,7 +55,7 @@ Inputs:
 Outputs:
 	np array - the sequence of 1s and 0s that the FSK signal encodes
 """
-def decode_fsk_zc(fsk_sig, sig_thresh = 0.3, zc_thresh = 0.1, width = 5):
+def decode_fsk_zc(fsk_sig, sig_thresh = 0.3, zc_thresh = 0.1, raw_perc = False):
 	#sequecne of 1s and 0s that we will return
 	msg = []
 
@@ -64,35 +65,30 @@ def decode_fsk_zc(fsk_sig, sig_thresh = 0.3, zc_thresh = 0.1, width = 5):
 		ind += 1
 
 	#Move to halfway of the bit pulse
-	ind += float(SAMP_RATE / BAUD_RATE) / 2
+	ind += float(SAMP_RATE / (2 * BAUD_RATE))
 
 	#Start zero crossing technique
 	mx = float('inf')
+	width = width = int(0.90 * SAMP_RATE / BAUD_RATE)
 	while mx > sig_thresh:
-		mx = 0
-		zcs = 0
-		is_pos = fsk_sig[int(ind) - width//2] > 0
-		for k in range(-width // 2, width // 2):
-			wind_ind = k + int(ind)
-			#First, we calculate max of the window with width = 'width'
-			if abs(fsk_sig[wind_ind]) > mx:
-				mx = abs(fsk_sig[wind_ind])
-			#Next, we determine the amount of zero crossings
-			if is_pos and fsk_sig[wind_ind] < 0:
-				is_pos = False
-				zcs += 1
-			elif not is_pos and fsk_sig[wind_ind] > 0:
-				is_pos = True
-				zcs += 1
+		#Max and zero crossings in the window
+		window = fsk_sig[int(ind - width//2):int(ind + width//2)]
+		mx = max(abs(min(window)), max(window))
+		zcs = len(list(itertools.groupby(window, lambda x: x > 0)))
 
 		#Percentage of zero crossings in the window
 		z_pcnt = zcs / width
 
 		#Append new bit
-		msg.append(int(z_pcnt > zc_thresh))
+		if not raw_perc:
+			msg.append(int(z_pcnt > zc_thresh))
+		else:
+			msg.append(z_pcnt)
+
 
 		#increment by 1 bit
 		ind += float(SAMP_RATE / BAUD_RATE)
+
 
 	#Remove last element, I know bad loop structure whatever
 	return np.array(msg[:-1])
@@ -163,7 +159,7 @@ Outputs:
 def loss(msg1, msg2):
 	l1, l2 = len(msg1), len(msg2)
 	if l1 > l2:
-		msg2 = np.append(msg2, np.zeros(l1 - l2))
+		msg2 = np.append(msg2, 1 - msg1[l2:])
 	elif l2 > l1:
-		msg1 = np.append(msg1, np.zeros(l2 - l1))
+		msg1 = np.append(msg1, 1 - msg2[l1:])
 	return sum(abs(msg1 - msg2)) / len(msg1)
