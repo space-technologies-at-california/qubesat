@@ -1,0 +1,46 @@
+20:52:16 **** Incremental Build of configuration Debug for project ADC_f446 ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F446xx -DDEBUG -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:242:13: error: invalid storage class for function 'MX_ADC1_Init'
+ static void MX_ADC1_Init(void)
+             ^~~~~~~~~~~~
+../Core/Src/main.c:292:13: error: invalid storage class for function 'MX_USART2_UART_Init'
+ static void MX_USART2_UART_Init(void)
+             ^~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:325:13: error: invalid storage class for function 'MX_GPIO_Init'
+ static void MX_GPIO_Init(void)
+             ^~~~~~~~~~~~
+../Core/Src/main.c:367:1: error: expected declaration or statement at end of input
+ }
+ ^
+../Core/Src/main.c: At top level:
+../Core/Src/main.c:54:13: warning: 'MX_GPIO_Init' used but never defined
+ static void MX_GPIO_Init(void);
+             ^~~~~~~~~~~~
+../Core/Src/main.c:55:13: warning: 'MX_USART2_UART_Init' used but never defined
+ static void MX_USART2_UART_Init(void);
+             ^~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:56:13: warning: 'MX_ADC1_Init' used but never defined
+ static void MX_ADC1_Init(void);
+             ^~~~~~~~~~~~
+../Core/Src/main.c:361:6: warning: 'Error_Handler' defined but not used [-Wunused-function]
+ void Error_Handler(void)
+      ^~~~~~~~~~~~~
+../Core/Src/main.c:325:13: warning: 'MX_GPIO_Init' defined but not used [-Wunused-function]
+ static void MX_GPIO_Init(void)
+             ^~~~~~~~~~~~
+../Core/Src/main.c:292:13: warning: 'MX_USART2_UART_Init' defined but not used [-Wunused-function]
+ static void MX_USART2_UART_Init(void)
+             ^~~~~~~~~~~~~~~~~~~
+../Core/Src/main.c:242:13: warning: 'MX_ADC1_Init' defined but not used [-Wunused-function]
+ static void MX_ADC1_Init(void)
+             ^~~~~~~~~~~~
+../Core/Src/main.c:196:6: warning: 'SystemClock_Config' defined but not used [-Wunused-function]
+ void SystemClock_Config(void)
+      ^~~~~~~~~~~~~~~~~~
+make: *** [Core/Src/subdir.mk:33: Core/Src/main.o] Error 1
+"make -j8 all" terminated with exit code 2. Build might be incomplete.
+
+20:52:17 Build Failed. 5 errors, 8 warnings. (took 519ms)
+
