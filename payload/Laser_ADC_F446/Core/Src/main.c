@@ -29,7 +29,11 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 #define ADC_BUF_LEN 8192
-#define NUM_PASSES 200
+#define NUM_PASSES 1
+#define NUM_FREQS 500
+#define mode 2 // 1 = print averages, 2 = print frequencies
+#define LASER_DELAY 25
+#define COOLDOWN 100
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -50,7 +54,9 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 uint16_t adc_buf[ADC_BUF_LEN];
 float avgs[ADC_BUF_LEN];
-int state = 0;
+float freqs[NUM_FREQS];
+int freq = 0;
+volatile int state = 0;
 int pass = 0;
 /* USER CODE END PV */
 
@@ -101,8 +107,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-  HAL_Delay(400);
+  HAL_Delay(LASER_DELAY);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
 
@@ -112,7 +119,7 @@ int main(void)
   {
 	if (state == 1) {
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-		HAL_Delay(750);
+		HAL_Delay(COOLDOWN);
 		for (int j = 0; j < ADC_BUF_LEN; j++) {
 			avgs[j] = (avgs[j] * pass + adc_buf[j]) / (pass + 1);
 		}
@@ -122,20 +129,51 @@ int main(void)
 		} else {
 			state = 0;
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-			HAL_Delay(400);
+			HAL_Delay(LASER_DELAY);
 			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
 		}
 	}
 	if (state == 2) {
-  		float val;
-  		for (int j = 0; j < ADC_BUF_LEN; j+=1){
-  			val = 3.3 * avgs[j] / 4096;
-  			sprintf(msg, "%f\n", val);
-  			HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-  		}
-  		while(1) {
+		if (mode == 1) {
+			float val = 0.0;
+			for (int j = 0; j < ADC_BUF_LEN; j+=1){
+				val = 3.3 * avgs[j] / 4096;
+				sprintf(msg, "%f\n", val);
+			  	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+			}
+			while(1) {
 
-  		}
+			}
+		} else {
+			HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
+			float average = 0;
+			int total = 0;
+			for (int j = 0; j < ADC_BUF_LEN; j++) {
+				total += avgs[j];
+			}
+			average = 3.3 * (total / ADC_BUF_LEN) / 4096;
+			freqs[freq] = average;
+			freq += 1;
+			if (freq == NUM_FREQS) {
+				state = 3;
+			} else {
+				pass = 0;
+				state = 0;
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+				HAL_Delay(LASER_DELAY);
+				HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+			}
+		}
+
+	}
+	if (state == 3) {
+		for (int j = 0; j < NUM_FREQS; j++) {
+			sprintf(msg, "%f\n", freqs[j]);
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		}
+		while (1) {
+
+		}
 	}
     /* USER CODE END WHILE */
 
@@ -187,7 +225,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV16;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
@@ -215,7 +253,7 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV8;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
