@@ -1,0 +1,3 @@
+Communication.c:69:15:SPI_Init	16	static
+Communication.c:88:15:SPI_Write	128	static
+Communication.c:142:15:SPI_Read	16	static

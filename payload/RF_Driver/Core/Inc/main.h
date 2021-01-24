@@ -54,7 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+//SPI_HandleTypeDef* Get_SPI(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

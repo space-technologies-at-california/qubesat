@@ -1,0 +1,7 @@
+AD9838.c:53:15:AD9838_Init	8	static
+AD9838.c:71:6:AD9838_Reset	8	static
+AD9838.c:82:6:AD9838_ClearReset	8	static
+AD9838.c:94:6:AD9838_SetRegisterValue	24	static
+AD9838.c:115:6:AD9838_SetFrequency	24	static
+AD9838.c:138:6:AD9838_SetPhase	24	static
+AD9838.c:153:6:AD9838_Setup	32	static
