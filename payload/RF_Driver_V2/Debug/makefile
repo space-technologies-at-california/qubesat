@@ -54,8 +54,8 @@ all: main-build
 main-build: RF_Driver_V2.elf secondary-outputs
 
 # Tool invocations
-RF_Driver_V2.elf: $(OBJS) $(USER_OBJS) C:\Users\Vidish\Desktop\STM32\ workspace\RF_Driver_V2\STM32F446RETX_FLASH.ld
-	arm-none-eabi-gcc -o "RF_Driver_V2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vidish\Desktop\STM32 workspace\RF_Driver_V2\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RF_Driver_V2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RF_Driver_V2.elf: $(OBJS) $(USER_OBJS) C:\Users\Vidish\Desktop\qubesat\payload\RF_Driver_V2\STM32F446RETX_FLASH.ld
+	arm-none-eabi-gcc -o "RF_Driver_V2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vidish\Desktop\qubesat\payload\RF_Driver_V2\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RF_Driver_V2.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

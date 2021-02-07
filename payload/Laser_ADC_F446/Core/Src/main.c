@@ -28,12 +28,15 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define ADC_BUF_LEN 8192
-#define NUM_PASSES 1
-#define NUM_FREQS 500
+#define ADC_BUF_LEN 10 //num_samples per iteration
+#define NUM_PASSES 1 // Number of averages per iteration
+#define NUM_FREQS 10000
+#define FREQ_PASS 1
 #define mode 2 // 1 = print averages, 2 = print frequencies
-#define LASER_DELAY 25
-#define COOLDOWN 100
+#define LASER_DELAY 0.01
+#define COOLDOWN 1
+#define WARMUP 0
+#define mod 1
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -55,9 +58,11 @@ UART_HandleTypeDef huart2;
 uint16_t adc_buf[ADC_BUF_LEN];
 float avgs[ADC_BUF_LEN];
 float freqs[NUM_FREQS];
+float avg_freqs[NUM_FREQS];
 int freq = 0;
 volatile int state = 0;
 int pass = 0;
+int num_freq = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,8 +112,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  //HAL_Delay(WARMUP);
+  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  //HAL_Delay(COOLDOWN);
   HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
   HAL_Delay(LASER_DELAY);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   /* USER CODE END 2 */
@@ -118,7 +127,7 @@ int main(void)
   while (1)
   {
 	if (state == 1) {
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 		HAL_Delay(COOLDOWN);
 		for (int j = 0; j < ADC_BUF_LEN; j++) {
 			avgs[j] = (avgs[j] * pass + adc_buf[j]) / (pass + 1);
@@ -128,7 +137,7 @@ int main(void)
 			state = 2;
 		} else {
 			state = 0;
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 			HAL_Delay(LASER_DELAY);
 			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
 		}
@@ -159,7 +168,11 @@ int main(void)
 			} else {
 				pass = 0;
 				state = 0;
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+				if (freq % mod == 0) {
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+				}else {
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+				}
 				HAL_Delay(LASER_DELAY);
 				HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
 			}
@@ -168,7 +181,23 @@ int main(void)
 	}
 	if (state == 3) {
 		for (int j = 0; j < NUM_FREQS; j++) {
-			sprintf(msg, "%f\n", freqs[j]);
+			avg_freqs[j] = (avg_freqs[j] * num_freq + freqs[j]) / (num_freq + 1);
+		}
+		num_freq += 1;
+		if (num_freq == FREQ_PASS) {
+			state = 4;
+		}else {
+			pass = 0;
+			state = 0;
+			freq = 0;
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			HAL_Delay(LASER_DELAY);
+			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+		}
+	}
+	if (state == 4) {
+		for (int j = 0; j < NUM_FREQS; j++) {
+			sprintf(msg, "%f\n", avg_freqs[j]);
 			HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 		}
 		while (1) {
@@ -270,7 +299,7 @@ static void MX_ADC1_Init(void)
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
