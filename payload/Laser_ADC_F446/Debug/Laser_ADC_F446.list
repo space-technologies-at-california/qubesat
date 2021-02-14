@@ -21,9 +21,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, DATA
   8 .data         000001dc  20000000  08006648  00020000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          000139e4  200001dc  08006824  000201dc  2**2
+  9 .bss          00013c00  200001dc  08006824  000201dc  2**2
                   ALLOC
- 10 ._user_heap_stack 00000600  20013bc0  08006824  00023bc0  2**0
+ 10 ._user_heap_stack 00000604  20013ddc  08006824  00023ddc  2**0
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  000201dc  2**0
                   CONTENTS, READONLY
@@ -39,9 +39,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  17 .debug_line   00008873  00000000  00000000  0004e719  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    000ccf6e  00000000  00000000  00056f8c  2**0
+ 18 .debug_str    000ccf6f  00000000  00000000  00056f8c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  00123efa  2**0
+ 19 .comment      0000007b  00000000  00000000  00123efb  2**0
                   CONTENTS, READONLY
  20 .debug_frame  00002b70  00000000  00000000  00123f78  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -1313,7 +1313,7 @@ int main(void)
  8000fbc:	2000      	movs	r0, #0
  8000fbe:	f000 fd0f 	bl	80019e0 <HAL_Delay>
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
- 8000fc2:	220a      	movs	r2, #10
+ 8000fc2:	2264      	movs	r2, #100	; 0x64
  8000fc4:	49ad      	ldr	r1, [pc, #692]	; (800127c <main+0x2f4>)
  8000fc6:	48ae      	ldr	r0, [pc, #696]	; (8001280 <main+0x2f8>)
  8000fc8:	f000 fd70 	bl	8001aac <HAL_ADC_Start_DMA>
@@ -1333,7 +1333,7 @@ int main(void)
  8000fda:	48a7      	ldr	r0, [pc, #668]	; (8001278 <main+0x2f0>)
  8000fdc:	f001 ff2e 	bl	8002e3c <HAL_GPIO_WritePin>
 		HAL_Delay(COOLDOWN);
- 8000fe0:	2001      	movs	r0, #1
+ 8000fe0:	2003      	movs	r0, #3
  8000fe2:	f000 fcfd 	bl	80019e0 <HAL_Delay>
 		for (int j = 0; j < ADC_BUF_LEN; j++) {
  8000fe6:	2300      	movs	r3, #0
@@ -1372,7 +1372,7 @@ int main(void)
  800103c:	3301      	adds	r3, #1
  800103e:	627b      	str	r3, [r7, #36]	; 0x24
  8001040:	6a7b      	ldr	r3, [r7, #36]	; 0x24
- 8001042:	2b09      	cmp	r3, #9
+ 8001042:	2b63      	cmp	r3, #99	; 0x63
  8001044:	ddd2      	ble.n	8000fec <main+0x64>
 		}
 		pass += 1;
@@ -1405,7 +1405,7 @@ int main(void)
  8001072:	2000      	movs	r0, #0
  8001074:	f000 fcb4 	bl	80019e0 <HAL_Delay>
 			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
- 8001078:	220a      	movs	r2, #10
+ 8001078:	2264      	movs	r2, #100	; 0x64
  800107a:	4980      	ldr	r1, [pc, #512]	; (800127c <main+0x2f4>)
  800107c:	4880      	ldr	r0, [pc, #512]	; (8001280 <main+0x2f8>)
  800107e:	f000 fd15 	bl	8001aac <HAL_ADC_Start_DMA>
@@ -1453,14 +1453,14 @@ int main(void)
  80010c8:	3301      	adds	r3, #1
  80010ca:	61fb      	str	r3, [r7, #28]
  80010cc:	69fb      	ldr	r3, [r7, #28]
- 80010ce:	2b09      	cmp	r3, #9
+ 80010ce:	2b63      	cmp	r3, #99	; 0x63
  80010d0:	dde7      	ble.n	80010a2 <main+0x11a>
 			}
 			average = 3.3 * (total / ADC_BUF_LEN) / 4096;
  80010d2:	6a3b      	ldr	r3, [r7, #32]
  80010d4:	4a6e      	ldr	r2, [pc, #440]	; (8001290 <main+0x308>)
  80010d6:	fb82 1203 	smull	r1, r2, r2, r3
- 80010da:	1092      	asrs	r2, r2, #2
+ 80010da:	1152      	asrs	r2, r2, #5
  80010dc:	17db      	asrs	r3, r3, #31
  80010de:	1ad3      	subs	r3, r2, r3
  80010e0:	4618      	mov	r0, r3
@@ -1529,7 +1529,7 @@ int main(void)
  8001156:	2000      	movs	r0, #0
  8001158:	f000 fc42 	bl	80019e0 <HAL_Delay>
 				HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
- 800115c:	220a      	movs	r2, #10
+ 800115c:	2264      	movs	r2, #100	; 0x64
  800115e:	4947      	ldr	r1, [pc, #284]	; (800127c <main+0x2f4>)
  8001160:	4847      	ldr	r0, [pc, #284]	; (8001280 <main+0x2f8>)
  8001162:	f000 fca3 	bl	8001aac <HAL_ADC_Start_DMA>
@@ -1621,7 +1621,7 @@ int main(void)
  8001206:	2000      	movs	r0, #0
  8001208:	f000 fbea 	bl	80019e0 <HAL_Delay>
 			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
- 800120c:	220a      	movs	r2, #10
+ 800120c:	2264      	movs	r2, #100	; 0x64
  800120e:	491b      	ldr	r1, [pc, #108]	; (800127c <main+0x2f4>)
  8001210:	481b      	ldr	r0, [pc, #108]	; (8001280 <main+0x2f8>)
  8001212:	f000 fc4b 	bl	8001aac <HAL_ADC_Start_DMA>
@@ -1675,19 +1675,19 @@ int main(void)
  8001270:	66666666 	.word	0x66666666
  8001274:	400a6666 	.word	0x400a6666
  8001278:	40020000 	.word	0x40020000
- 800127c:	20009f24 	.word	0x20009f24
- 8001280:	2000023c 	.word	0x2000023c
+ 800127c:	2000a08c 	.word	0x2000a08c
+ 8001280:	200003a4 	.word	0x200003a4
  8001284:	200001fc 	.word	0x200001fc
  8001288:	20000214 	.word	0x20000214
  800128c:	20000200 	.word	0x20000200
- 8001290:	66666667 	.word	0x66666667
+ 8001290:	51eb851f 	.word	0x51eb851f
  8001294:	40b00000 	.word	0x40b00000
  8001298:	200001f8 	.word	0x200001f8
- 800129c:	20009f38 	.word	0x20009f38
- 80012a0:	20000284 	.word	0x20000284
+ 800129c:	2000a154 	.word	0x2000a154
+ 80012a0:	200003ec 	.word	0x200003ec
  80012a4:	20000204 	.word	0x20000204
  80012a8:	080063b8 	.word	0x080063b8
- 80012ac:	20013b78 	.word	0x20013b78
+ 80012ac:	20013d94 	.word	0x20013d94
 
 080012b0 <SystemClock_Config>:
 /**
@@ -1953,7 +1953,7 @@ static void MX_ADC1_Init(void)
  8001426:	3710      	adds	r7, #16
  8001428:	46bd      	mov	sp, r7
  800142a:	bd80      	pop	{r7, pc}
- 800142c:	2000023c 	.word	0x2000023c
+ 800142c:	200003a4 	.word	0x200003a4
  8001430:	40012000 	.word	0x40012000
  8001434:	0f000001 	.word	0x0f000001
 
@@ -2021,7 +2021,7 @@ static void MX_USART2_UART_Init(void)
  800147e:	bf00      	nop
  8001480:	bd80      	pop	{r7, pc}
  8001482:	bf00      	nop
- 8001484:	20013b78 	.word	0x20013b78
+ 8001484:	20013d94 	.word	0x20013d94
  8001488:	40004400 	.word	0x40004400
 
 0800148c <MX_DMA_Init>:
@@ -2447,7 +2447,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
  8001704:	40012000 	.word	0x40012000
  8001708:	40023800 	.word	0x40023800
  800170c:	40020000 	.word	0x40020000
- 8001710:	20009ec4 	.word	0x20009ec4
+ 8001710:	2000a02c 	.word	0x2000a02c
  8001714:	40026410 	.word	0x40026410
 
 08001718 <HAL_UART_MspInit>:
@@ -2725,7 +2725,7 @@ void DMA2_Stream0_IRQHandler(void)
  8001806:	bf00      	nop
  8001808:	bd80      	pop	{r7, pc}
  800180a:	bf00      	nop
- 800180c:	20009ec4 	.word	0x20009ec4
+ 800180c:	2000a02c 	.word	0x2000a02c
 
 08001810 <_sbrk>:
  *
@@ -2806,7 +2806,7 @@ void *_sbrk(ptrdiff_t incr)
  800186c:	20020000 	.word	0x20020000
  8001870:	00000400 	.word	0x00000400
  8001874:	20000208 	.word	0x20000208
- 8001878:	20013bc0 	.word	0x20013bc0
+ 8001878:	20013de0 	.word	0x20013de0
 
 0800187c <SystemInit>:
   *         configuration.
@@ -2928,7 +2928,7 @@ LoopFillZerobss:
   ldr  r2, =_sbss
  80018f0:	200001dc 	.word	0x200001dc
   ldr  r3, = _ebss
- 80018f4:	20013bc0 	.word	0x20013bc0
+ 80018f4:	20013ddc 	.word	0x20013ddc
 
 080018f8 <ADC_IRQHandler>:
  * @retval None       
@@ -3091,7 +3091,7 @@ __weak void HAL_IncTick(void)
  80019bc:	4770      	bx	lr
  80019be:	bf00      	nop
  80019c0:	20000008 	.word	0x20000008
- 80019c4:	20013bb8 	.word	0x20013bb8
+ 80019c4:	20013dd4 	.word	0x20013dd4
 
 080019c8 <HAL_GetTick>:
   * @note This function is declared as __weak to be overwritten in case of other 
@@ -3111,7 +3111,7 @@ __weak uint32_t HAL_GetTick(void)
  80019d4:	f85d 7b04 	ldr.w	r7, [sp], #4
  80019d8:	4770      	bx	lr
  80019da:	bf00      	nop
- 80019dc:	20013bb8 	.word	0x20013bb8
+ 80019dc:	20013dd4 	.word	0x20013dd4
 
 080019e0 <HAL_Delay>:
   *       implementations in user file.
@@ -13053,7 +13053,7 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  80062c6:	b103      	cbz	r3, 80062ca <_sbrk_r+0x1a>
  80062c8:	602b      	str	r3, [r5, #0]
  80062ca:	bd38      	pop	{r3, r4, r5, pc}
- 80062cc:	20013bbc 	.word	0x20013bbc
+ 80062cc:	20013dd8 	.word	0x20013dd8
 
 080062d0 <__ascii_mbtowc>:
  80062d0:	b082      	sub	sp, #8

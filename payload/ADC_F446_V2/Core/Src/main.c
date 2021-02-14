@@ -22,12 +22,21 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define ADC_BUF_LEN 100 //num_samples per iteration
+#define NUM_PASSES 1 // Number of averages per iteration
+#define NUM_FREQS 10000
+#define FREQ_PASS 1
+#define mode 2 // 1 = print averages, 2 = print frequencies
+#define LASER_DELAY 0.01
+#define COOLDOWN 3
+#define WARMUP 0
+#define mod 1
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -43,10 +52,22 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
+TIM_HandleTypeDef htim14;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+uint16_t adc_buf[ADC_BUF_LEN];
+float avgs[ADC_BUF_LEN];
+float freqs[NUM_FREQS];
+float avg_freqs[NUM_FREQS];
+int freq = 0;
+volatile int state = 0;
+volatile int laser_state = 0;
+volatile int delay = 0;
+int delay_count = 0;
+int pass = 0;
+int num_freq = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,6 +76,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -71,7 +93,7 @@ static void MX_ADC1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  char msg[16];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,14 +117,63 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Base_Start_IT(&htim14);
+  laser_state = 2;
+  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  //HAL_Delay(WARMUP);
+  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  //HAL_Delay(COOLDOWN);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  laser_state = 2;
+  delay = 1;
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  laser_state = 0;
   /* USER CODE END 2 */
+  // laser_state 0 -> laser off
+  // laser_state 1 -> laser on
+  // laser_state 2 -> do nothing
+  // state 0 -> laser on collect data
+  // state 1 -> laser off print results
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	if (state == 0) {
+		// Laser On
+		laser_state = 1;
+		// Laser delay
+		delay = 1;
+		// Collect data
+	}
+	if (state == 1) {
+		// Laser off
+		laser_state = 0;
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+		//Laser cooldown
+		delay = 1;
+		// Printing data
+		for (int j = 0; j < NUM_FREQS; j++) {
+			sprintf(msg, "%f\n", adc_buf[j]);
+			HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		}
+		state = 0;
+		while (1) {
+
+		}
+	}
+	if (state == 3) {
+		if (laser_state == 1) {
+			if (delay_count == WARMUP) {
+				//change state
+			} else {
+				delay_count += 1;
+			}
+		}
+	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -212,6 +283,37 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 1800-1;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 10000-1;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -294,7 +396,24 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+}
+*/
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+	//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	state = 1;
+}
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
+	if (delay == 0) {
+		return;
+	}
+	if (delay == 1) {
+		state = 3;
+	}
+}
 /* USER CODE END 4 */
 
 /**

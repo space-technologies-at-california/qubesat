@@ -28,13 +28,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define ADC_BUF_LEN 10 //num_samples per iteration
+#define ADC_BUF_LEN 100 //num_samples per iteration
 #define NUM_PASSES 1 // Number of averages per iteration
 #define NUM_FREQS 10000
 #define FREQ_PASS 1
 #define mode 2 // 1 = print averages, 2 = print frequencies
 #define LASER_DELAY 0.01
-#define COOLDOWN 1
+#define COOLDOWN 3
 #define WARMUP 0
 #define mod 1
 /* USER CODE END PTD */

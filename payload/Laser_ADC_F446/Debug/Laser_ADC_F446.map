@@ -83,13 +83,13 @@ Allocating common symbols
 Common symbol       size              file
 
 errno               0x4               c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.win32_1.5.0.202011040924/tools/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard\libc_nano.a(lib_a-reent.o)
-avgs                0x28              Core/Src/main.o
+avgs                0x190             Core/Src/main.o
 uwTick              0x4               Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
 pFlash              0x20              Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.o
 hadc1               0x48              Core/Src/main.o
 avg_freqs           0x9c40            Core/Src/main.o
 hdma_adc1           0x60              Core/Src/main.o
-adc_buf             0x14              Core/Src/main.o
+adc_buf             0xc8              Core/Src/main.o
 freqs               0x9c40            Core/Src/main.o
 huart2              0x40              Core/Src/main.o
 
@@ -3493,7 +3493,7 @@ LOAD c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm3
  .igot.plt      0x00000000200001dc        0x0 c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.win32_1.5.0.202011040924/tools/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v7e-m/fpv4-sp/hard/crtbegin.o
                 0x00000000200001dc                . = ALIGN (0x4)
 
-.bss            0x00000000200001dc    0x139e4 load address 0x0000000008006824
+.bss            0x00000000200001dc    0x13c00 load address 0x0000000008006824
                 0x00000000200001dc                _sbss = .
                 0x00000000200001dc                __bss_start__ = _sbss
  *(.bss)
@@ -3516,32 +3516,33 @@ LOAD c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm3
                 0x0000000020000210        0x4 c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.win32_1.5.0.202011040924/tools/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard\libc_nano.a(lib_a-nano-mallocr.o)
                 0x0000000020000210                __malloc_sbrk_start
  *(COMMON)
- COMMON         0x0000000020000214    0x139a4 Core/Src/main.o
+ COMMON         0x0000000020000214    0x13bc0 Core/Src/main.o
                 0x0000000020000214                avgs
-                0x000000002000023c                hadc1
-                0x0000000020000284                avg_freqs
-                0x0000000020009ec4                hdma_adc1
-                0x0000000020009f24                adc_buf
-                0x0000000020009f38                freqs
-                0x0000000020013b78                huart2
- COMMON         0x0000000020013bb8        0x4 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
-                0x0000000020013bb8                uwTick
- COMMON         0x0000000020013bbc        0x4 c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.win32_1.5.0.202011040924/tools/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard\libc_nano.a(lib_a-reent.o)
-                0x0000000020013bbc                errno
-                0x0000000020013bc0                . = ALIGN (0x4)
-                0x0000000020013bc0                _ebss = .
-                0x0000000020013bc0                __bss_end__ = _ebss
+                0x00000000200003a4                hadc1
+                0x00000000200003ec                avg_freqs
+                0x000000002000a02c                hdma_adc1
+                0x000000002000a08c                adc_buf
+                0x000000002000a154                freqs
+                0x0000000020013d94                huart2
+ COMMON         0x0000000020013dd4        0x4 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+                0x0000000020013dd4                uwTick
+ COMMON         0x0000000020013dd8        0x4 c:/users/vidish/desktop/stm32cubeide_1.4.0/stm32cubeide/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.win32_1.5.0.202011040924/tools/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard\libc_nano.a(lib_a-reent.o)
+                0x0000000020013dd8                errno
+                0x0000000020013ddc                . = ALIGN (0x4)
+                0x0000000020013ddc                _ebss = .
+                0x0000000020013ddc                __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x0000000020013bc0      0x600 load address 0x0000000008006824
-                0x0000000020013bc0                . = ALIGN (0x8)
+                0x0000000020013ddc      0x604 load address 0x0000000008006824
+                0x0000000020013de0                . = ALIGN (0x8)
+ *fill*         0x0000000020013ddc        0x4 
                 [!provide]                        PROVIDE (end = .)
-                0x0000000020013bc0                PROVIDE (_end = .)
-                0x0000000020013dc0                . = (. + _Min_Heap_Size)
- *fill*         0x0000000020013bc0      0x200 
-                0x00000000200141c0                . = (. + _Min_Stack_Size)
- *fill*         0x0000000020013dc0      0x400 
-                0x00000000200141c0                . = ALIGN (0x8)
+                0x0000000020013de0                PROVIDE (_end = .)
+                0x0000000020013fe0                . = (. + _Min_Heap_Size)
+ *fill*         0x0000000020013de0      0x200 
+                0x00000000200143e0                . = (. + _Min_Stack_Size)
+ *fill*         0x0000000020013fe0      0x400 
+                0x00000000200143e0                . = ALIGN (0x8)
 
 /DISCARD/
  libc.a(*)
@@ -3847,36 +3848,36 @@ OUTPUT(Laser_ADC_F446.elf elf32-littlearm)
  .debug_line    0x0000000000006d02      0xb26 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.o
  .debug_line    0x0000000000007828     0x104b Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
-.debug_str      0x0000000000000000    0xccf6e
- .debug_str     0x0000000000000000    0xcaba7 Core/Src/main.o
-                                      0xcaf77 (size before relaxing)
- .debug_str     0x00000000000caba7       0x78 Core/Src/stm32f4xx_hal_msp.o
+.debug_str      0x0000000000000000    0xccf6f
+ .debug_str     0x0000000000000000    0xcaba8 Core/Src/main.o
+                                      0xcaf78 (size before relaxing)
+ .debug_str     0x00000000000caba8       0x78 Core/Src/stm32f4xx_hal_msp.o
                                       0xc66b3 (size before relaxing)
- .debug_str     0x00000000000cac1f       0xd5 Core/Src/stm32f4xx_it.o
+ .debug_str     0x00000000000cac20       0xd5 Core/Src/stm32f4xx_it.o
                                       0xc620b (size before relaxing)
- .debug_str     0x00000000000cacf4      0x4e9 Core/Src/sysmem.o
+ .debug_str     0x00000000000cacf5      0x4e9 Core/Src/sysmem.o
                                        0x5f66 (size before relaxing)
- .debug_str     0x00000000000cb1dd       0xc4 Core/Src/system_stm32f4xx.o
+ .debug_str     0x00000000000cb1de       0xc4 Core/Src/system_stm32f4xx.o
                                       0xc5f95 (size before relaxing)
- .debug_str     0x00000000000cb2a1       0x36 Core/Startup/startup_stm32f446retx.o
+ .debug_str     0x00000000000cb2a2       0x36 Core/Startup/startup_stm32f446retx.o
                                          0x73 (size before relaxing)
- .debug_str     0x00000000000cb2d7      0x58d Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
+ .debug_str     0x00000000000cb2d8      0x58d Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
                                       0xc6aa3 (size before relaxing)
- .debug_str     0x00000000000cb864      0x289 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.o
+ .debug_str     0x00000000000cb865      0x289 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.o
                                       0xc6507 (size before relaxing)
- .debug_str     0x00000000000cbaed      0x392 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
+ .debug_str     0x00000000000cbaee      0x392 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
                                       0xc686d (size before relaxing)
- .debug_str     0x00000000000cbe7f      0x31d Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
+ .debug_str     0x00000000000cbe80      0x31d Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.o
                                       0xc6385 (size before relaxing)
- .debug_str     0x00000000000cc19c      0x20c Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
+ .debug_str     0x00000000000cc19d      0x20c Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
                                       0xc61d4 (size before relaxing)
- .debug_str     0x00000000000cc3a8      0x135 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.o
+ .debug_str     0x00000000000cc3a9      0x135 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.o
                                       0xc6178 (size before relaxing)
- .debug_str     0x00000000000cc4dd      0x259 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
+ .debug_str     0x00000000000cc4de      0x259 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
                                       0xc6387 (size before relaxing)
- .debug_str     0x00000000000cc736      0x31c Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.o
+ .debug_str     0x00000000000cc737      0x31c Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.o
                                       0xc63d9 (size before relaxing)
- .debug_str     0x00000000000cca52      0x51c Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
+ .debug_str     0x00000000000cca53      0x51c Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
                                       0xc67bc (size before relaxing)
 
 .comment        0x0000000000000000       0x7b
