@@ -1,0 +1,6 @@
+Reference, Value, Footprint, Datasheet
+"C1","?pF","","~"
+"D1","D_Photo","","~"
+"R1","?Ω","","~"
+"U1","OPA1622","Package_SON:Texas_S-PVSON-N10","http://www.ti.com/lit/ds/symlink/opa1622.pdf"
+"U2","OPA1622","Package_SON:Texas_S-PVSON-N10","http://www.ti.com/lit/ds/symlink/opa1622.pdf"

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>/Users/jaredcheng/Desktop/STAC/Photodiode/Photodiode.sch</source>
+    <date>Monday, February 15, 2021 at 03:12:06 PM</date>
+    <tool>Eeschema (5.1.9-0-10_14)</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>Photodiode</title>
+        <company/>
+        <rev>v01 </rev>
+        <date>2021-01-26</date>
+        <source>Photodiode.sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value="Author: Jared Cheng Saisaran Kidambi"/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="C1">
+      <value>?pF</value>
+      <datasheet>~</datasheet>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>6017692C</tstamp>
+    </comp>
+    <comp ref="D1">
+      <value>D_Photo</value>
+      <datasheet>~</datasheet>
+      <libsource lib="Device" part="D_Photo" description="Photodiode"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>6017D11E</tstamp>
+    </comp>
+    <comp ref="R1">
+      <value>?Ω</value>
+      <datasheet>~</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>601809C8</tstamp>
+    </comp>
+    <comp ref="U1">
+      <value>OPA1622</value>
+      <footprint>Package_SON:Texas_S-PVSON-N10</footprint>
+      <datasheet>http://www.ti.com/lit/ds/symlink/opa1622.pdf</datasheet>
+      <libsource lib="Amplifier_Audio" part="OPA1622" description="High-Fidelity, Bipolar-Input, Audio Operational Amplifier, VSON-10"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>6018CD78</tstamp>
+    </comp>
+    <comp ref="U2">
+      <value>OPA1622</value>
+      <footprint>Package_SON:Texas_S-PVSON-N10</footprint>
+      <datasheet>http://www.ti.com/lit/ds/symlink/opa1622.pdf</datasheet>
+      <libsource lib="Amplifier_Audio" part="OPA1622" description="High-Fidelity, Bipolar-Input, Audio Operational Amplifier, VSON-10"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamp>601919F7</tstamp>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Amplifier_Audio" part="OPA1622">
+      <description>High-Fidelity, Bipolar-Input, Audio Operational Amplifier, VSON-10</description>
+      <docs>http://www.ti.com/lit/ds/symlink/opa1622.pdf</docs>
+      <footprints>
+        <fp>Texas*PVSON*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">OPA1622</field>
+        <field name="Footprint">Package_SON:Texas_S-PVSON-N10</field>
+      </fields>
+      <pins>
+        <pin num="1" name="+" type="input"/>
+        <pin num="2" name="V+" type="power_in"/>
+        <pin num="3" name="GND" type="power_in"/>
+        <pin num="4" name="V-" type="power_in"/>
+        <pin num="5" name="+" type="input"/>
+        <pin num="6" name="-" type="input"/>
+        <pin num="7" name="~" type="output"/>
+        <pin num="8" name="EN" type="input"/>
+        <pin num="9" name="~" type="output"/>
+        <pin num="10" name="-" type="input"/>
+        <pin num="11" name="V-" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C">
+      <description>Unpolarized capacitor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>C_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="D_Photo">
+      <description>Photodiode</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">D_Photo</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R_US">
+      <description>Resistor, US symbol</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R_US</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~" type="passive"/>
+        <pin num="2" name="~" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Amplifier_Audio">
+      <uri>/Users/jaredcheng/Desktop/STAC/kicad-symbols-master/Amplifier_Audio.lib</uri>
+    </library>
+    <library logical="Device">
+      <uri>/Users/jaredcheng/Desktop/STAC/kicad-symbols-master/Device.lib</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="Net-(C1-Pad1)">
+      <node ref="C1" pin="1"/>
+      <node ref="U2" pin="1"/>
+      <node ref="U1" pin="9"/>
+      <node ref="R1" pin="1"/>
+    </net>
+    <net code="2" name="GND">
+      <node ref="D1" pin="1"/>
+      <node ref="D1" pin="2"/>
+      <node ref="R1" pin="2"/>
+      <node ref="U1" pin="1"/>
+      <node ref="U1" pin="10"/>
+      <node ref="U1" pin="8"/>
+      <node ref="U2" pin="8"/>
+      <node ref="C1" pin="2"/>
+    </net>
+    <net code="3" name="Net-(U2-Pad10)">
+      <node ref="U2" pin="9"/>
+      <node ref="U2" pin="10"/>
+    </net>
+  </nets>
+</export>
