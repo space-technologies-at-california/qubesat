@@ -1,0 +1,234 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "Photodiode"
+Date "2021-01-26"
+Rev "v01 "
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 "Author: Jared Cheng Saisaran Kidambi"
+$EndDescr
+$Comp
+L Device:C C1
+U 1 1 6017692C
+P 5250 2550
+F 0 "C1" V 4998 2550 50  0000 C CNN
+F 1 "?pF" V 5089 2550 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0201_0603Metric" H 5288 2400 50  0001 C CNN
+F 3 "~" H 5250 2550 50  0001 C CNN
+	1    5250 2550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3900 2550 4850 2550
+Wire Wire Line
+	4850 2100 4850 2550
+Connection ~ 4850 2550
+Wire Wire Line
+	4850 2550 5100 2550
+Wire Wire Line
+	4850 2100 5100 2100
+Wire Wire Line
+	5650 2100 5650 2550
+Wire Wire Line
+	3900 2550 3900 2800
+Wire Wire Line
+	4850 3050 3900 3050
+Connection ~ 3900 3050
+Wire Wire Line
+	3900 3050 3900 3100
+Wire Wire Line
+	5450 2950 5650 2950
+Wire Wire Line
+	5650 2550 5650 2950
+Connection ~ 5650 2550
+Connection ~ 5650 2950
+Wire Wire Line
+	5650 2950 6150 2950
+$Comp
+L power:GND #PWR0101
+U 1 1 6017A809
+P 3900 3700
+F 0 "#PWR0101" H 3900 3450 50  0001 C CNN
+F 1 "GND" H 3905 3527 50  0000 C CNN
+F 2 "" H 3900 3700 50  0001 C CNN
+F 3 "" H 3900 3700 50  0001 C CNN
+	1    3900 3700
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 6017B1C6
+P 5050 2650
+F 0 "#PWR0102" H 5050 2400 50  0001 C CNN
+F 1 "GND" H 5055 2477 50  0000 C CNN
+F 2 "" H 5050 2650 50  0001 C CNN
+F 3 "" H 5050 2650 50  0001 C CNN
+	1    5050 2650
+	1    0    0    1   
+$EndComp
+$Comp
+L Device:D_Photo D1
+U 1 1 6017D11E
+P 3900 3000
+F 0 "D1" V 3804 3158 50  0000 L CNN
+F 1 "D_Photo" V 3895 3158 50  0000 L CNN
+F 2 "Diode_SMD:D_0201_0603Metric" H 3850 3000 50  0001 C CNN
+F 3 "~" H 3850 3000 50  0001 C CNN
+	1    3900 3000
+	0    1    1    0   
+$EndComp
+Connection ~ 3900 2800
+$Comp
+L Device:R_US R1
+U 1 1 601809C8
+P 5250 2100
+F 0 "R1" V 5045 2100 50  0000 C CNN
+F 1 "?Ω" V 5136 2100 50  0000 C CNN
+F 2 "Resistor_SMD:R_0201_0603Metric" V 5290 2090 50  0001 C CNN
+F 3 "~" H 5250 2100 50  0001 C CNN
+	1    5250 2100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3900 2800 3900 3050
+Wire Wire Line
+	4850 2550 4850 2850
+Wire Wire Line
+	3900 3100 3900 3700
+Wire Wire Line
+	5400 2100 5650 2100
+Wire Wire Line
+	5400 2550 5650 2550
+$Comp
+L power:GND #PWR0103
+U 1 1 602B9B4E
+P 6350 2550
+F 0 "#PWR0103" H 6350 2300 50  0001 C CNN
+F 1 "GND" H 6355 2377 50  0000 C CNN
+F 2 "" H 6350 2550 50  0001 C CNN
+F 3 "" H 6350 2550 50  0001 C CNN
+	1    6350 2550
+	1    0    0    1   
+$EndComp
+$Comp
+L power:PWR_FLAG #FLG0101
+U 1 1 602C2AEB
+P 5050 3250
+F 0 "#FLG0101" H 5050 3325 50  0001 C CNN
+F 1 "PWR_FLAG" H 5050 3423 50  0000 C CNN
+F 2 "" H 5050 3250 50  0001 C CNN
+F 3 "~" H 5050 3250 50  0001 C CNN
+	1    5050 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Simulation_SPICE:OPAMP U1
+U 1 1 6033FF64
+P 5150 2950
+F 0 "U1" H 5150 2469 50  0000 C CNN
+F 1 "OPAMP" H 5150 2560 50  0000 C CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 5150 2950 50  0001 C CNN
+F 3 "~" H 5150 2950 50  0001 C CNN
+F 4 "Y" H 5150 2950 50  0001 L CNN "Spice_Netlist_Enabled"
+F 5 "X" H 5150 2950 50  0001 L CNN "Spice_Primitive"
+	1    5150 2950
+	1    0    0    1   
+$EndComp
+$Comp
+L Simulation_SPICE:OPAMP U2
+U 1 1 60340AF3
+P 6450 2850
+F 0 "U2" H 6794 2896 50  0000 L CNN
+F 1 "OPAMP" H 6794 2805 50  0000 L CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 6450 2850 50  0001 C CNN
+F 3 "~" H 6450 2850 50  0001 C CNN
+F 4 "Y" H 6450 2850 50  0001 L CNN "Spice_Netlist_Enabled"
+F 5 "X" H 6450 2850 50  0001 L CNN "Spice_Primitive"
+	1    6450 2850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6150 2750 6000 2750
+Wire Wire Line
+	6000 2750 6000 2450
+Wire Wire Line
+	6000 2450 6750 2450
+Wire Wire Line
+	6750 2450 6750 2850
+$Comp
+L power:+5V #PWR0104
+U 1 1 60354553
+P 5050 3250
+F 0 "#PWR0104" H 5050 3100 50  0001 C CNN
+F 1 "+5V" H 5065 3423 50  0000 C CNN
+F 2 "" H 5050 3250 50  0001 C CNN
+F 3 "" H 5050 3250 50  0001 C CNN
+	1    5050 3250
+	1    0    0    1   
+$EndComp
+$Comp
+L power:+5V #PWR0105
+U 1 1 60355E4B
+P 6350 3150
+F 0 "#PWR0105" H 6350 3000 50  0001 C CNN
+F 1 "+5V" H 6365 3323 50  0000 C CNN
+F 2 "" H 6350 3150 50  0001 C CNN
+F 3 "" H 6350 3150 50  0001 C CNN
+	1    6350 3150
+	1    0    0    1   
+$EndComp
+Connection ~ 3900 3100
+Connection ~ 5050 3250
+Connection ~ 6750 2850
+$Comp
+L Connector:Conn_01x03_Male J1
+U 1 1 60459A4A
+P 6150 4100
+F 0 "J1" H 6258 4381 50  0000 C CNN
+F 1 "Conn_01x03_Male" H 6258 4290 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 6150 4100 50  0001 C CNN
+F 3 "~" H 6150 4100 50  0001 C CNN
+	1    6150 4100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6350 4000 6950 4000
+Wire Wire Line
+	6350 4200 6950 4200
+$Comp
+L power:+5V #PWR0106
+U 1 1 6045AA6C
+P 6950 4000
+F 0 "#PWR0106" H 6950 3850 50  0001 C CNN
+F 1 "+5V" V 6965 4128 50  0000 L CNN
+F 2 "" H 6950 4000 50  0001 C CNN
+F 3 "" H 6950 4000 50  0001 C CNN
+	1    6950 4000
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0107
+U 1 1 6045B437
+P 6950 4200
+F 0 "#PWR0107" H 6950 3950 50  0001 C CNN
+F 1 "GND" V 6955 4072 50  0000 R CNN
+F 2 "" H 6950 4200 50  0001 C CNN
+F 3 "" H 6950 4200 50  0001 C CNN
+	1    6950 4200
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6750 2850 7300 2850
+Wire Wire Line
+	6350 4100 7350 4100
+Text Label 6450 4100 0    50   ~ 0
+Photodiode_Out
+Text Label 6950 2850 0    50   ~ 0
+Photodiode_Out
+$EndSCHEMATC

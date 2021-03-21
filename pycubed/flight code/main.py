@@ -1,12 +1,22 @@
-from pycubed import cubesat
 import time
+import datetime
+import board
+import busio
+import digitalio
+
+from pycubed import cubesat
 import testSD
 
 class Satellite:
-    states = ['start', 'detumble', 'normal', 'lowPower', 'criticallyLowPower']
+    states = ["start", "detumble", "normal", "lowPower", "criticallyLowPower"]
 
     def __init__(self):
-        self.currentState = 'start'
+        isDeployed = getDeployStatus()
+        if (!isDeployed):
+            deploy()
+        self.currentState = "start"
+        sd = SD()
+        uart = busio.UART(board.TX, board.RX, baudrate=9600)
 
     # Returns readings from all of the sensors on PyCubed
     def collectBasicData(self):
@@ -23,13 +33,19 @@ class Satellite:
         return data
 
     def collectPayload(self):
-        pass
+        if currentState == "normal":
+            uart.write("START")
+        elif currentState == "lowPower":
+            uart.write("LOWPWR")
+        elif currentState == "criticallyLowPower":
+            uart.write("STOP")
+        if uart.in_waiting:
+            data = uart.read(32)
+            data_string = "".join([chr(b) for b in data])
+			return data_string
 
     def sendTelemetry(self, data):
-        pass
-
-    def deploy_antenna(self):
-        pass
+        sd.save(data)
 
     def detumble(self):
         pass
@@ -37,15 +53,22 @@ class Satellite:
     def isStable(self):
         pass
 
+    def updateDeployStatus(self, status):
+        save(['is_deployed:', status])
+
+    def getDeployStatus(self)
+        pass
+
     # Method associated with the 'start' state
     def deploy(self):
         delay(20 minutes)
-        deploy_antenna()
+        updateDeployStatus(status=1)
         detumble()
 
 sat = Satellite()
 while True:
     basicData = sat.collectBasicData()
+    timestamp = datetime.datetime.now()
     if !(sat.isStable()):
         sat.currentState = "detumble"
     elif basicData["vbatt"] > 3.7:
@@ -59,11 +82,10 @@ while True:
         sat.detumble()
     elif sat.currentState == "normal":
         payloadData = sat.collectPayload()
-        sat.sendTelemetry(basicData)
-        sat.sendTelemetry(payloadData)
+        sat.sendTelemetry([timestamp, basicData, payloadData])
     elif sat.currentState == "lowPower":
         payloadData = sat.collectPayload()
-        sat.sendTelemetry(payloadData)
+        sat.sendTelemetry([timestamp, payloadData])
     elif sat.currentState == "criticallyLowPower":
-        sat.sendTelemetry(basicData)
+        sat.sendTelemetry([timestamp, basicData])
     delay(1)
