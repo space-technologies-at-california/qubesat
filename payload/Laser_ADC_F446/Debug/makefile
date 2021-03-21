@@ -1,5 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
+# Toolchain: GNU Tools for STM32 (9-2020-q2-update)
 ################################################################################
 
 -include ../makefile.init
@@ -28,6 +29,12 @@ endif
 
 -include ../makefile.defs
 
+OPTIONAL_TOOL_DEPS := \
+$(wildcard ../makefile.defs) \
+$(wildcard ../makefile.init) \
+$(wildcard ../makefile.targets) \
+
+
 BUILD_ARTIFACT_NAME := Laser_ADC_F446
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX := 
@@ -54,22 +61,22 @@ all: main-build
 main-build: Laser_ADC_F446.elf secondary-outputs
 
 # Tool invocations
-Laser_ADC_F446.elf: $(OBJS) $(USER_OBJS) C:\Users\Vidish\Desktop\qubesat\payload\Laser_ADC_F446\STM32F446RETX_FLASH.ld
+Laser_ADC_F446.elf: $(OBJS) $(USER_OBJS) C:\Users\Vidish\Desktop\qubesat\payload\Laser_ADC_F446\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-gcc -o "Laser_ADC_F446.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vidish\Desktop\qubesat\payload\Laser_ADC_F446\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Laser_ADC_F446.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-default.size.stdout: $(EXECUTABLES)
+default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-size  $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Laser_ADC_F446.list: $(EXECUTABLES)
+Laser_ADC_F446.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Laser_ADC_F446.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Laser_ADC_F446.bin: $(EXECUTABLES)
+Laser_ADC_F446.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "Laser_ADC_F446.bin"
 	@echo 'Finished building: $@'
 	@echo ' '

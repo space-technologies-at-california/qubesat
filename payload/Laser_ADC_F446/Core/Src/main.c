@@ -13,7 +13,7 @@
   * the "License"; You may not use this file except in compliance with the
   * License. You may obtain a copy of the License at:
   *                        opensource.org/licenses/BSD-3-Clause
-  *
+  *3
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -28,14 +28,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define ADC_BUF_LEN 100 //num_samples per iteration
+#define ADC_BUF_LEN 1 //num_samples per iteration
 #define NUM_PASSES 1 // Number of averages per iteration
 #define NUM_FREQS 10000
-#define FREQ_PASS 1
+#define FREQ_PASS 10000
 #define mode 2 // 1 = print averages, 2 = print frequencies
-#define LASER_DELAY 0.01
-#define COOLDOWN 3
-#define WARMUP 0
 #define mod 1
 /* USER CODE END PTD */
 
@@ -52,6 +49,8 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -63,6 +62,8 @@ int freq = 0;
 volatile int state = 0;
 int pass = 0;
 int num_freq = 0;
+uint32_t COOLDOWN = 2000;
+uint32_t LASER_DELAY = 500;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,8 +72,9 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-
+void delay_us(uint32_t);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -111,15 +113,15 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-  //HAL_Delay(WARMUP);
-  //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-  //HAL_Delay(COOLDOWN);
-  HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+  HAL_TIM_Base_Start(&htim2);
+  delay_us(500);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-  HAL_Delay(LASER_DELAY);
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  delay_us(LASER_DELAY);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+  //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  state = 1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,7 +130,8 @@ int main(void)
   {
 	if (state == 1) {
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-		HAL_Delay(COOLDOWN);
+		HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_RESET);
+		delay_us(COOLDOWN);
 		for (int j = 0; j < ADC_BUF_LEN; j++) {
 			avgs[j] = (avgs[j] * pass + adc_buf[j]) / (pass + 1);
 		}
@@ -138,8 +141,10 @@ int main(void)
 		} else {
 			state = 0;
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-			HAL_Delay(LASER_DELAY);
-			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+			delay_us(LASER_DELAY);
+			HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+			//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+			state = 1;
 		}
 	}
 	if (state == 2) {
@@ -154,7 +159,7 @@ int main(void)
 
 			}
 		} else {
-			HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
+			//HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
 			float average = 0;
 			int total = 0;
 			for (int j = 0; j < ADC_BUF_LEN; j++) {
@@ -173,8 +178,10 @@ int main(void)
 				}else {
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 				}
-				HAL_Delay(LASER_DELAY);
-				HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+				delay_us(LASER_DELAY);
+				HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+				//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+				state = 1;
 			}
 		}
 
@@ -191,8 +198,10 @@ int main(void)
 			state = 0;
 			freq = 0;
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-			HAL_Delay(LASER_DELAY);
-			HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+			delay_us(LASER_DELAY);
+			HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
+			//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+			state = 1;
 		}
 	}
 	if (state == 4) {
@@ -313,6 +322,51 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 90-1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -403,6 +457,11 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	state = 1;
+}
+
+void delay_us (uint32_t us) {
+	__HAL_TIM_SET_COUNTER(&htim2, 0);
+	while (__HAL_TIM_GET_COUNTER(&htim2) < us);
 }
 /* USER CODE END 4 */
 

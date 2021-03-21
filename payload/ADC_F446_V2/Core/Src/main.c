@@ -28,13 +28,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define ADC_BUF_LEN 100 //num_samples per iteration
+#define ADC_BUF_LEN 1 //num_samples per iteration
 #define NUM_PASSES 1 // Number of averages per iteration
 #define NUM_FREQS 10000
-#define FREQ_PASS 1
+#define FREQ_PASS 100
 #define mode 2 // 1 = print averages, 2 = print frequencies
-#define LASER_DELAY 0.01
-#define COOLDOWN 3
+#define LASER_DELAY 1
+#define COOLDOWN 10
 #define WARMUP 0
 #define mod 1
 /* USER CODE END PTD */
@@ -63,9 +63,8 @@ float freqs[NUM_FREQS];
 float avg_freqs[NUM_FREQS];
 int freq = 0;
 volatile int state = 0;
-volatile int laser_state = 0;
+volatile int cooldown_count = 0;
 volatile int delay = 0;
-int delay_count = 0;
 int pass = 0;
 int num_freq = 0;
 /* USER CODE END PV */
@@ -78,7 +77,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
-
+void delay_us(uint32_t);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -94,6 +93,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   char msg[16];
+//  char test_msg[16];
+  uint32_t time1 = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -119,65 +120,141 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim14);
-  laser_state = 2;
   //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
   //HAL_Delay(WARMUP);
   //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
   //HAL_Delay(COOLDOWN);
+  HAL_TIM_Base_Start_IT(&htim14);
   HAL_GPIO_WritePin(GPIOA, LD2_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-  laser_state = 2;
   delay = 1;
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
-  laser_state = 0;
+  while (delay == 1) {
+
+  }
+  //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  state = 1;
+
+  // Reset timer somehow
+
   /* USER CODE END 2 */
-  // laser_state 0 -> laser off
-  // laser_state 1 -> laser on
-  // laser_state 2 -> do nothing
-  // state 0 -> laser on collect data
-  // state 1 -> laser off print results
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
-	if (state == 0) {
-		// Laser On
-		laser_state = 1;
-		// Laser delay
-		delay = 1;
-		// Collect data
-	}
-	if (state == 1) {
-		// Laser off
-		laser_state = 0;
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-		//Laser cooldown
-		delay = 1;
-		// Printing data
-		for (int j = 0; j < NUM_FREQS; j++) {
-			sprintf(msg, "%f\n", adc_buf[j]);
-			HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-		}
-		state = 0;
-		while (1) {
+    {
+  	if (state == 1) {
+  		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  		//delay_us(COOLDOWN);
+  		delay = 2;
+  		__HAL_TIM_SET_COUNTER(&htim14, 0);
+//  		time1 = (uint32_t) __HAL_TIM_GET_COUNTER(&htim14);
+  		while (delay == 2) {
 
-		}
-	}
-	if (state == 3) {
-		if (laser_state == 1) {
-			if (delay_count == WARMUP) {
-				//change state
-			} else {
-				delay_count += 1;
-			}
-		}
-	}
+  		}
+//  		time1 = (uint32_t) __HAL_TIM_GET_COUNTER(&htim14) - time1;
+//  		sprintf(msg, "%f\n", time1);
+//  		HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+  		HAL_TIM_Base_Stop_IT(&htim14);
+  		for (int j = 0; j < ADC_BUF_LEN; j++) {
+  			avgs[j] = (avgs[j] * pass + adc_buf[j]) / (pass + 1);
+  		}
+  		pass += 1;
+  		if (pass == NUM_PASSES) {
+  			state = 2;
+  		} else {
+  			state = 0;
+  			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  			//delay_us(LASER_DELAY);
+  			delay = 1;
+  			HAL_TIM_Base_Start_IT(&htim14);
+  			while (delay == 1) {
+
+  			}
+  			//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  			state = 1;
+
+  		}
+  	}
+  	if (state == 2) {
+  		if (mode == 1) {
+  			float val = 0.0;
+  			for (int j = 0; j < ADC_BUF_LEN; j+=1){
+  				val = 3.3 * avgs[j] / 4096;
+  				sprintf(msg, "%f\n", val);
+  			  	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+  			}
+  			while(1) {
+
+  			}
+  		} else {
+  			HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
+  			float average = 0;
+  			int total = 0;
+  			for (int j = 0; j < ADC_BUF_LEN; j++) {
+  				total += avgs[j];
+  			}
+  			average = 3.3 * (total / ADC_BUF_LEN) / 4096;
+  			freqs[freq] = average;
+  			freq += 1;
+  			if (freq == NUM_FREQS) {
+  				state = 3;
+  			} else {
+  				pass = 0;
+  				state = 0;
+  				if (freq % mod == 0) {
+  					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  				}else {
+  					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+  				}
+  				//delay_us(LASER_DELAY);
+  				delay = 1;
+  				//__HAL_TIM_SET_COUNTER(&htim14, 0);
+  				HAL_TIM_Base_Start_IT(&htim14);
+  				while (delay == 1) {
+
+  				}
+  				//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  				state = 1;
+  			}
+  		}
+
+  	}
+  	if (state == 3) {
+  		for (int j = 0; j < NUM_FREQS; j++) {
+  			avg_freqs[j] = (avg_freqs[j] * num_freq + freqs[j]) / (num_freq + 1);
+  		}
+  		num_freq += 1;
+  		if (num_freq == FREQ_PASS) {
+  			state = 4;
+  		}else {
+  			pass = 0;
+  			state = 0;
+  			freq = 0;
+  			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  			// laser delay
+  			delay = 1;
+  			//__HAL_TIM_SET_COUNTER(&htim14, 0);
+  			HAL_TIM_Base_Start_IT(&htim14);
+  			while (delay == 1) {
+
+  			}
+  			//HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  			state = 1;
+  		}
+  	}
+  	if (state == 4) {
+  		for (int j = 0; j < NUM_FREQS; j++) {
+  			sprintf(msg, "%f\n", avg_freqs[j]);
+  			HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+  		}
+  		while (1) {
+
+  		}
+  	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+    }
   /* USER CODE END 3 */
 }
 
@@ -230,6 +307,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI, RCC_MCODIV_1);
 }
 
 /**
@@ -298,11 +376,11 @@ static void MX_TIM14_Init(void)
 
   /* USER CODE END TIM14_Init 1 */
   htim14.Instance = TIM14;
-  htim14.Init.Prescaler = 1800-1;
+  htim14.Init.Prescaler = 90-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 10000-1;
+  htim14.Init.Period = 10-1;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
   {
     Error_Handler();
@@ -393,6 +471,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PA8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -407,11 +493,25 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
-	if (delay == 0) {
-		return;
-	}
 	if (delay == 1) {
-		state = 3;
+		//char delay_msg[16];
+		//sprintf(delay_msg, "%d\n", -1);
+		//HAL_UART_Transmit(&huart2, (uint8_t*)delay_msg, strlen(delay_msg), HAL_MAX_DELAY);
+//		HAL_Delay(LASER_DELAY);
+		delay = 0;
+//		state = next_state;
+	}
+	if (delay == 2) {
+		//char delay_msg[16];
+		//sprintf(delay_msg, "%d\n", -2);
+		//HAL_UART_Transmit(&huart2, (uint8_t*)delay_msg, strlen(delay_msg), HAL_MAX_DELAY);
+//		HAL_Delay(COOLDOWN);
+		if (cooldown_count == COOLDOWN - 1) {
+			delay = 0;
+			cooldown_count = 0;
+		} else {
+			cooldown_count += 1;
+		}
 	}
 }
 /* USER CODE END 4 */
