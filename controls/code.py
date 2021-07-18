@@ -75,16 +75,18 @@ class MagnetorquerInterface:
     3-axis magnetoquer hardware interface
     """
     BOARD_VOLTAGE = 5
-    MAX_PWM = 0xffff
+    MAX_PWM = 0xffff #65535
 
     @staticmethod
     def _map_duty_cycle(current, resistance, current_limit=0.15):
         """
         Takes in the desired current (A) and converts it to a duty cycle
         """
+        # print("Current", current)
         current = current if current < current_limit else current_limit
         max_current = MagnetorquerInterface.BOARD_VOLTAGE / resistance
         duty_cycle = int(min(current / max_current, 1.0) * MagnetorquerInterface.MAX_PWM)
+        # print("Duty cycle", duty_cycle)
         return duty_cycle
 
     @staticmethod
@@ -188,7 +190,10 @@ class DetumblingController:
                 # Compute the control vector and write it to the
                 angular_velocity, magnetic_field = self._average_state_data(self.state_data)
                 b_dot = angular_velocity.cross(magnetic_field)
-                self.control_vector = self.k / (magnetic_field / abs(magnetic_field)) * b_dot
+                # print(b_dot)
+                # print(abs(magnetic_field))
+                self.control_vector = self.k / abs(magnetic_field) * b_dot
+                # print("Control vector", self.control_vector)
                 self.interface.write(self.control_vector.x, self.control_vector.y, self.control_vector.z)
                 self.interface.enable()
         else:
@@ -198,19 +203,58 @@ class DetumblingController:
             self.interface.disable()
 
 
+"""
+Test examples
+
+(1) <- potential recording problem here?
+angular_velocity = Vector(0.1017, 0.0968, 0.1017)
+magnetic_field = Vector(1.095e-5, 3.404e-6, 2.108e-5) * 1e4
+---
+desired_dipole = Vector(0.418, -0.180, -0.0744)
+current = Vector(0.149, -0.064, -0.03545)
+
+(2)
+angular_velocity = Vector(0.001349, 0.0003236, -0.001617)
+magnetic_field = Vector(4.289e-6, -4.045e-6, -2.3518e-5) * 1e4
+---
+desired_dipole = Vector(-0.00245, 0.00429, -0.000359)
+current = Vector(-0.000875, 0.00153, -0.00017)
+
+(3)
+angular_velocity = Vector(0.001349, 0.0003236, -0.001617)
+magnetic_field = Vector(1.30087197e-05, -4.19480928e-06,  1.97188537e-05) * 1e4
+---
+desired_dipole = Vector(0.387, -0.124, -0.08507)
+current = Vector(0.138, -0.044, -0.0.041)
+"""
+
 
 def main():
     # https://www.cubespace.co.za/products/adcs-components/cubetorquer/
     X_PROFILE = Magnetorquer(30, 0.15, 2.8)
     Y_PROFILE = Magnetorquer(30, 0.15, 2.8)
     Z_PROFILE = Magnetorquer(81.5, 0.15, 2.1)
-    controller = DetumblingController(X_PROFILE, Y_PROFILE, Z_PROFILE, Vector(4.2e-4, 4.2e-4, 1.27e-4), 1)
+    controller = DetumblingController(X_PROFILE, Y_PROFILE, Z_PROFILE, Vector(4.2, 4.2, 1.27), 1)
 
+    print("Starting controller")
     while True:
         mag_x, mag_y, mag_z = cubesat.magnetic
         mag_vec = Vector(mag_x, mag_y, mag_z)
         gyro_x, gyro_y, gyro_z = cubesat.gyro
         gyro_vec = Vector(gyro_x, gyro_y, gyro_z) * math.pi / 180
+
+        # Test Case (1)
+        #gyro_vec = Vector(0.1017, 0.0968, 0.1017)
+        #mag_vec = Vector(1.095e-5, 3.404e-6, 2.108e-5) * 1e4
+
+        # Test Case (2)
+        # gyro_vec = Vector(0.001349, 0.0003236, -0.001617)
+        # mag_vec = Vector(4.289e-6, -4.045e-6, -2.3518e-5) * 1e4
+
+        # Test Case (3)
+        # gyro_vec = Vector(0.10537412, 0.08955995, 0.105369)
+        # mag_vec = Vector(1.30087197e-05, -4.19480928e-06,  1.97188537e-05) * 1e4
+
         controller.step(gyro_vec, mag_vec)
         time.sleep(0.1)
 
