@@ -12,10 +12,10 @@ class Satellite:
 
     def __init__(self):
         isDeployed = getDeployStatus()
-        if (!isDeployed):
+        if !isDeployed:
             deploy()
         self.currentState = "start"
-        sd = SD()
+        sd = testSD.SD()
         uart = busio.UART(board.TX, board.RX, baudrate=9600)
 
     # Returns readings from all of the sensors on PyCubed
